@@ -2,7 +2,7 @@ module Imp.Programs where
 
 import Imp.Lang
 
-programs = [prog0, prog1, prog2, prog3, prog4, prog5, prog6]
+programs = [prog0, prog1, prog2, prog3, prog4, prog5, prog6, prog7, prog8, prog9]
 
 -- 13 
 -- Result: 42
@@ -51,3 +51,47 @@ prog5 =
 prog6 :: Prog
 prog6 =
   Prog (If (Const 1) (Write (Const 13)) (Write (Var "x"))) (Const 42)
+
+-- fibonacci numbers
+-- Result : 5
+prog7 :: Prog 
+prog7 = 
+  Prog 
+    (Assign "x" (Const 1) 
+      `Seq` Assign "y" (Const 1)
+      `Seq` Assign "z" (BinOp Plus (Var "x") (Var "y")) 
+      `Seq` Assign "x" (Var "y")
+      `Seq` Assign "y" (Var "z")
+      `Seq` Assign "z" (BinOp Plus (Var "x") (Var "y")) 
+      `Seq` Assign "x" (Var "y")
+      `Seq` Assign "y" (Var "z")
+      `Seq` Assign "z" (BinOp Plus (Var "x") (Var "y")) 
+      `Seq` Assign "x" (Var "y")
+      `Seq` Assign "y" (Var "z"))
+    (Var "y")
+
+-- Error division by zero 
+prog8 :: Prog 
+prog8 = 
+  Prog 
+    (Assign "x" (Const 1) 
+      `Seq` Assign "y" (Const 1)
+      `Seq` If (BinOp Div (Var "x") (BinOp Minus (Var "x") (Var "y"))) (Write (Var "x")) (Write (Var "y")))
+    (Var "y")
+
+
+-- given, your input is a correct int number, the output is: 
+-- <your input> squared + 1
+-- Result: <your input> squared
+prog9 :: Prog 
+prog9 = 
+  Prog 
+    (Read "x" 
+      `Seq` Assign "x" (BinOp Mult (Var "x") (Var "x"))
+      `Seq` Assign "y" (BinOp Plus (Var "x") (Const 1)) 
+      `Seq` Assign "y" (BinOp Div (Var "y") (Var "y")) 
+      `Seq` If (BinOp Minus (Var "y") (Const 1)) (Write (BinOp Plus (Const 1) (Var "x"))) Skip)
+    (Var "x")
+
+
+

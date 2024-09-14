@@ -28,4 +28,4 @@ data Op
   | Minus              -- (-)
   | Mult               -- (*)
   | Div                -- div 
-  deriving (Eq, Show)
+  deriving (Eq, Show, Ord)
