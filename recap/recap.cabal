@@ -29,9 +29,7 @@ library
       Imp.Lang
       Imp.Programs
       Lib
-      MyMaybeT
       RPN
-      RPNMaybe
       RPNStack
       Stream
   other-modules:

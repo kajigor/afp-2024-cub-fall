@@ -2,6 +2,7 @@ module Imp.Programs where
 
 import Imp.Lang
 
+programs :: [Prog]
 programs = [prog0, prog1, prog2, prog3, prog4, prog5, prog6]
 
 -- 13 
