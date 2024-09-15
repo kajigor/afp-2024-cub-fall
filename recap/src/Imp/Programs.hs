@@ -52,8 +52,14 @@ prog6 :: Prog
 prog6 =
   Prog (If (Const 1) (Write (Const 13)) (Write (Var "x"))) (Const 42)
 
+-- Just check that Assign works well
 prog7 :: Prog 
 prog7 = 
   Prog 
     (Assign "x" (Const 12345))
     (Var "x")
+
+-- Normal evaluation with mult
+prog8 :: Prog 
+prog8 = 
+  Prog Skip (BinOp Div (BinOp Mult (Const 13) (Const 13)) (Const 13))

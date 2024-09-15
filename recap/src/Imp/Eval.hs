@@ -19,29 +19,32 @@ data Error = UndefinedVar String | ParsingErr String | DivByZero deriving (Show)
 -- Evaluation monad
 type EvalM = StateT VarMap (ExceptT Error IO)
 
+
 evalExpr :: Expr -> EvalM Int
-evalExpr expr = do
+evalExpr (Var varName) = do
   vars <- get
 
-  case expr of
-    Var varName -> case M.lookup varName vars of
-      Just value -> Control.Monad.State.lift $ Control.Monad.Trans.Class.lift $ return value
-      Nothing -> Control.Monad.State.lift $ throwE (UndefinedVar varName)
+  case M.lookup varName vars of
+    Just value -> Control.Monad.State.lift $ Control.Monad.Trans.Class.lift $ return value
+    Nothing -> Control.Monad.State.lift $ throwE (UndefinedVar varName)
 
-    Const value -> Control.Monad.State.lift $ Control.Monad.Trans.Class.lift $ return value
 
-    BinOp op expr1 expr2 -> do
-      result1 <- evalExpr expr1
-      result2 <- evalExpr expr2
+evalExpr (Const value) = do
+  Control.Monad.State.lift $ Control.Monad.Trans.Class.lift $ return value
 
-      Control.Monad.State.lift (case op of
-        Plus -> Control.Monad.Trans.Class.lift $ return $ result1 + result2
-        Minus -> Control.Monad.Trans.Class.lift $ return $ result1 - result2
-        Mult -> Control.Monad.Trans.Class.lift $ return $ result1 * result2
-        Div -> case result2 of 
-          0 -> throwE DivByZero
-          _ -> Control.Monad.Trans.Class.lift $ return $ div result1 result2
-          )
+
+evalExpr (BinOp op expr1 expr2) = do
+  result1 <- evalExpr expr1
+  result2 <- evalExpr expr2
+
+  Control.Monad.State.lift (case op of
+    Plus -> Control.Monad.Trans.Class.lift $ return $ result1 + result2
+    Minus -> Control.Monad.Trans.Class.lift $ return $ result1 - result2
+    Mult -> Control.Monad.Trans.Class.lift $ return $ result1 * result2
+    Div -> case result2 of 
+      0 -> throwE DivByZero
+      _ -> Control.Monad.Trans.Class.lift $ return $ div result1 result2
+      )
 
 
 evalCom :: Com -> EvalM ()
@@ -51,11 +54,11 @@ evalCom (Assign varName expr) = do
   modify $ M.insertWith const varName result
 
 
-evalCom (Read value) = do
+evalCom (Read varName) = do
   valueString <- Control.Monad.State.lift $ Control.Monad.Trans.Class.lift getLine
 
   case readMaybe valueString :: Maybe Int of
-    Just value -> modify $ M.insertWith const valueString value
+    Just value -> modify $ M.insertWith const varName value
     Nothing -> return ()
 
 
