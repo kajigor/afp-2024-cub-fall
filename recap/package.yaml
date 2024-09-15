@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - transformers
 - mtl
+- acme-iot == 0.1.0.1
 - containers
 
 ghc-options:

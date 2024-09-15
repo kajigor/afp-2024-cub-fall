@@ -65,3 +65,6 @@ packages:
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+
+extra-deps:
+  - acme-iot-0.1.0.1@sha256:2e8e331469a7237c6b32bfdaccb44d657a651abe8ad74ca435cfc8549e664859,646
