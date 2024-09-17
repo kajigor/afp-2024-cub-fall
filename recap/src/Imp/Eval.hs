@@ -1,14 +1,13 @@
 module Imp.Eval where
 
 import Control.Monad.State
-    ( modify, evalStateT, MonadState(get), MonadTrans(lift), StateT )
+    ( modify, evalStateT, MonadState(get), MonadTrans, StateT )
 import Control.Monad.Trans.Except ( runExceptT, throwE, ExceptT (..) )
 import qualified Data.Map.Strict as M
 import Text.Printf (printf)
-import Text.Read (readMaybe, lift)
+import Text.Read (readMaybe)
 import Imp.Lang
 import Control.Monad.Trans.Class (MonadTrans, lift)
--- import Control.Monad.Trans.IO ( IOT, fromIO )
 
 -- Variable mapping; shadowing is allowed
 type VarMap = M.Map String Int
@@ -20,61 +19,61 @@ data Error = UndefinedVar String | ParsingErr String | DivByZero deriving (Show)
 type EvalM = StateT VarMap (ExceptT Error IO)
 
 
+evalBinaryExpr :: Integral a => Op -> a -> a -> a
+evalBinaryExpr op val1 val2
+  | op == Plus = val1 + val2
+  | op == Minus = val1 - val2
+  | op == Mult = val1 * val2
+  | otherwise = div val1 val2 
+
+
 evalExpr :: Expr -> EvalM Int
 evalExpr (Var varName) = do
   vars <- get
 
   case M.lookup varName vars of
-    Just value -> Control.Monad.State.lift $ Control.Monad.Trans.Class.lift $ return value
-    Nothing -> Control.Monad.State.lift $ throwE (UndefinedVar varName)
+    Just value -> lift $ lift $ return value
+    Nothing -> lift $ throwE (UndefinedVar varName)
 
 
 evalExpr (Const value) = do
-  Control.Monad.State.lift $ Control.Monad.Trans.Class.lift $ return value
+  lift $ lift $ return value
 
 
 evalExpr (BinOp op expr1 expr2) = do
   result1 <- evalExpr expr1
   result2 <- evalExpr expr2
 
-  Control.Monad.State.lift (case op of
-    Plus -> Control.Monad.Trans.Class.lift $ return $ result1 + result2
-    Minus -> Control.Monad.Trans.Class.lift $ return $ result1 - result2
-    Mult -> Control.Monad.Trans.Class.lift $ return $ result1 * result2
-    Div -> case result2 of 
-      0 -> throwE DivByZero
-      _ -> Control.Monad.Trans.Class.lift $ return $ div result1 result2
-      )
+  lift (case op of
+    Div | result2 == 0 -> throwE DivByZero
+    _ -> lift $ return $ evalBinaryExpr op result1 result2
+    )
 
 
 evalCom :: Com -> EvalM ()
 evalCom (Assign varName expr) = do
   result <- evalExpr expr
 
-  modify $ M.insertWith const varName result
+  modify $ M.insert varName result
 
 
 evalCom (Read varName) = do
-  valueString <- Control.Monad.State.lift $ Control.Monad.Trans.Class.lift getLine
+  valueString <- lift $ lift getLine
 
   case readMaybe valueString :: Maybe Int of
-    Just value -> modify $ M.insertWith const varName value
+    Just value -> modify $ M.insert varName value
     Nothing -> return ()
 
 
 evalCom (Write expr) = do
   result <- evalExpr expr
 
-  Control.Monad.State.lift $ Control.Monad.Trans.Class.lift $ printf $ show result
-
-  return ()
+  lift $ lift $ print result
 
 
 evalCom (Seq com1 com2) = do
-  result1 <- evalCom com1
-  result2 <- evalCom com2
-
-  return ()
+  evalCom com1
+  evalCom com2
 
 
 evalCom (If expr com1 com2) = do
