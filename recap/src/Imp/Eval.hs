@@ -17,13 +17,17 @@ data Error = UndefinedVar String | ParsingErr String | DivByZero deriving (Show)
 -- Evaluation monad
 type EvalM = StateT VarMap (ExceptT Error IO)
 
+-- version for soft deadline, without variables support
+
 evalExpr :: Expr -> EvalM Int
 evalExpr (Const a) = return a
 evalExpr (Var v) = undefined
 evalExpr (BinOp op expr1 expr2) = do
   res1 <- evalExpr expr1
   res2 <- evalExpr expr2
-  return $ 
+  if (op == Div) && (res2 == 0)
+  then lift $ throwE DivByZero
+  else return $ 
     case op of
       Plus -> res1 + res2
       Minus -> res1 - res2
