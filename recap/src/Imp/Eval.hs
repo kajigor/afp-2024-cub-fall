@@ -1,7 +1,7 @@
 module Imp.Eval where
 
 import Control.Monad.State
-    ( modify, evalStateT, MonadState(get), MonadTrans(lift), StateT )
+    ( modify, evalStateT, MonadState(get), MonadTrans(lift), StateT, put)
 import Control.Monad.Trans.Except ( runExceptT, throwE, ExceptT )
 import qualified Data.Map.Strict as M
 import Text.Printf (printf)
@@ -17,11 +17,13 @@ data Error = UndefinedVar String | ParsingErr String | DivByZero deriving (Show)
 -- Evaluation monad
 type EvalM = StateT VarMap (ExceptT Error IO)
 
--- version for soft deadline, without variables support
-
 evalExpr :: Expr -> EvalM Int
 evalExpr (Const a) = return a
-evalExpr (Var v) = undefined
+evalExpr (Var v) =  do
+    varMap <- get 
+    case  M.lookup v varMap of
+        Just value -> return value 
+        Nothing -> lift $ throwE $ UndefinedVar ("There is no " ++ v ++ " in map")
 evalExpr (BinOp op expr1 expr2) = do
   res1 <- evalExpr expr1
   res2 <- evalExpr expr2
@@ -47,8 +49,17 @@ evalCom (If expr com1 com2 ) = do
   then evalCom com1 
   else evalCom com2 
 evalCom Skip = return ()
-evalCom (Assign str expr) = undefined
-evalCom (Read str) = undefined
+evalCom (Assign str expr) = do
+  map <- get
+  val <- evalExpr expr
+  put (M.insert str val map)
+evalCom (Read str) = do
+  line <- lift $ lift getLine
+  case readMaybe line of
+    Just lineInt -> do
+       map <- get
+       put (M.insert str lineInt map)
+    Nothing -> lift $ throwE $ ParsingErr ("Wrong input: " ++ line ++ ". Int was expected")
 
 evalProg :: Prog -> EvalM Int
 evalProg (Prog com expr) =  do

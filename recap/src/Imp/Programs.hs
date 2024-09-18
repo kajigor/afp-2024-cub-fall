@@ -2,7 +2,7 @@ module Imp.Programs where
 
 import Imp.Lang
 
-programs = [prog0, prog1, prog2, prog3, prog4, prog5, prog6]
+programs = [prog0, prog1, prog2, prog3, prog4, prog5, prog6, prog7]
 
 -- 13 
 -- Result: 42
@@ -51,3 +51,9 @@ prog5 =
 prog6 :: Prog
 prog6 =
   Prog (If (Const 1) (Write (Const 13)) (Write (Var "x"))) (Const 42)
+
+-- input: not int
+-- Error: ParsingErr
+prog7 :: Prog
+prog7 =
+  Prog (Read "x") (Const 4)
