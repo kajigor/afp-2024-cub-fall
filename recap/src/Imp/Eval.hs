@@ -18,13 +18,38 @@ data Error = UndefinedVar String | ParsingErr String | DivByZero deriving (Show)
 type EvalM = StateT VarMap (ExceptT Error IO)
 
 evalExpr :: Expr -> EvalM Int
-evalExpr = undefined 
+evalExpr (Const a) = return a
+evalExpr (Var v) = undefined
+evalExpr (BinOp op expr1 expr2) = do
+  res1 <- evalExpr expr1
+  res2 <- evalExpr expr2
+  return $ 
+    case op of
+      Plus -> res1 + res2
+      Minus -> res1 - res2
+      Div -> res1 `div` res2
+      Mult -> res1 * res2
 
 evalCom :: Com -> EvalM ()
-evalCom = undefined 
+evalCom (Write expr) = do
+  val <- evalExpr expr
+  lift (lift $ print val)
+evalCom (Seq com1 com2) = do
+    evalCom com1 
+    evalCom com2
+evalCom (If expr com1 com2 ) = do
+  val <- evalExpr expr
+  if val == 0
+  then evalCom com1 
+  else evalCom com2 
+evalCom Skip = return ()
+evalCom (Assign str expr) = undefined
+evalCom (Read str) = undefined
 
 evalProg :: Prog -> EvalM Int
-evalProg = undefined
+evalProg (Prog com expr) =  do
+  evalCom com
+  evalExpr expr
 
 eval :: Prog -> VarMap -> IO (Either Error Int)
 eval program state = runExceptT (evalStateT (evalProg program) state)
