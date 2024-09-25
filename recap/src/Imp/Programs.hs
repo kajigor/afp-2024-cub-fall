@@ -2,7 +2,8 @@ module Imp.Programs where
 
 import Imp.Lang
 
-programs = [prog0, prog1, prog2, prog3, prog4, prog5, prog6]
+programs :: [Prog]
+programs = [prog0, prog1, prog2, prog3, prog4, prog5, prog6, prog7]
 
 -- 13 
 -- Result: 42
@@ -51,3 +52,14 @@ prog5 =
 prog6 :: Prog
 prog6 =
   Prog (If (Const 1) (Write (Const 13)) (Write (Var "x"))) (Const 42)
+
+prog7 :: Prog
+prog7 = Prog
+  (Seq
+    (Read "x")
+    (Seq
+      (Read "y")
+      (Seq
+        (Write (BinOp Mult (Var "x") (Var "y")))
+        Skip)))
+  (BinOp Plus (Var "x") (Var "y"))
