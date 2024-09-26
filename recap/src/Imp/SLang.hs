@@ -19,23 +19,31 @@ data GEQ a b where
   GEQS :: GEQ a b -> GEQ (S a) (S b)
 
 geqTrans :: GEQ a b -> GEQ b c -> GEQ a c
-geqTrans = undefined
+geqTrans _ GEQZ = GEQZ
+geqTrans (GEQS ab) (GEQS cd) = GEQS (geqTrans ab cd)
 
 class Numm a where
   geqRefl :: GEQ a a
 
 instance Numm Z where
-  geqRefl = undefined
+  geqRefl = GEQZ
 
 instance (Numm a) => Numm (S a) where
-  geqRefl = undefined
+  geqRefl = GEQS geqRefl
 
 data SafeExpr t i where
   Var ::
     GEQ i (S iv) ->
     iv ->
     SafeExpr Int i
--- ...
+  Const :: Int -> SafeExpr Int Z
+  BinOp :: L.Op -> SafeExpr Int i -> SafeExpr Int i -> SafeExpr Int i
+  Read :: SafeExpr Int Z
+  Write :: SafeExpr Int i -> SafeExpr () i
+  Seq :: SafeExpr () i -> SafeExpr a  -> SafeExpr a
+  If :: SafeExpr Int -> SafeExpr a -> SafeExpr a -> SafeExpr a
+  LetIn :: String -> SafeExpr Int -> SafeExpr a -> SafeExpr a
+  Skip :: SafeExpr ()
 
 data Error = ParsingErr String
   deriving (Eq, Show)
