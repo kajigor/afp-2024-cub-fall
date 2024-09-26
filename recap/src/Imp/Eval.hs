@@ -22,9 +22,7 @@ type EvalM = StateT VarMap (ExceptT Error IO)
 getMap :: String -> EvalM Int
 getMap varName = do
     varMap <- get
-    case M.lookup varName varMap of
-        Just value -> return value
-        Nothing    -> throwError (UndefinedVar varName)
+    maybe (throwError (UndefinedVar varName)) return (M.lookup varName varMap)
 
 setMap :: String -> Int -> EvalM ()
 setMap varName value = modify (M.insert varName value)
@@ -36,11 +34,6 @@ readInt = do
         Just n  -> return n
         Nothing -> throwError (ParsingErr "expected Int")
 
-readSafe str =
-  case readMaybe str of
-    Just n -> return n
-    Nothing -> throwError (ParsingErr "expected Int")
-
 evalExpr :: Expr -> EvalM Int
 evalExpr expr = do
   case expr of
@@ -49,34 +42,22 @@ evalExpr expr = do
       return (val)
     Const val -> do -- a constant
       return (val)
-    BinOp Plus expr1 expr2 -> do -- a binary operators
+    BinOp op expr1 expr2 -> do -- a binary operators
       x <- evalExpr expr1
       y <- evalExpr expr2
-      return (x + y)
-    BinOp Minus expr1 expr2 -> do
-      x <- evalExpr expr1
-      y <- evalExpr expr2
-      return (x - y)
-    BinOp Mult expr1 expr2 -> do
-      x <- evalExpr expr1
-      y <- evalExpr expr2
-      return (x * y)
-    BinOp Div expr1 expr2 -> do
-      x <- evalExpr expr1
-      y <- evalExpr expr2
-      if y == 0
-        then throwError DivByZero
-        else return (x `div` y)
+      case op of
+        Plus -> return (x + y)
+        Minus -> return (x - y)
+        Mult -> return (x * y)
+        Div -> if y == 0
+          then throwError DivByZero
+          else return (x `div` y)
 
 evalCom :: Com -> EvalM ()
 evalCom com = do
   case com of
-    Assign str expr -> do -- assignes the result of the expression to the variable
-      val <- evalExpr expr
-      setMap str val
-    Read str -> do -- reads from standard input (getLine); expects the input to be Int
-      input <- readInt
-      setMap str input
+    Assign str expr -> evalExpr expr >>= setMap str -- assignes the result of the expression to the variable
+    Read str -> readInt >>= setMap str -- reads from standard input (getLine); expects the input to be Int
     Write expr -> do -- writes to the stardard output (putStrLn)
       output <- evalExpr expr
       liftIO $ print output
