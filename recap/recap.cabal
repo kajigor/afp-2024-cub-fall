@@ -26,14 +26,14 @@ source-repository head
 library
   exposed-modules:
       Imp.Eval
+      Imp.Exprs
       Imp.Lang
       Imp.Programs
+      Imp.SLang
+      Imp.TLang
       Lib
-      MyMaybeT
-      RPN
-      RPNMaybe
-      RPNStack
-      Stream
+      Mutability.IOArray
+      Mutability.IORef
   other-modules:
       Paths_recap
   autogen-modules:
@@ -42,7 +42,8 @@ library
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      array
+    , base >=4.7 && <5
     , containers
     , mtl
     , transformers
@@ -58,7 +59,8 @@ executable recap-exe
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      array
+    , base >=4.7 && <5
     , containers
     , mtl
     , recap
@@ -76,7 +78,8 @@ test-suite recap-test
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      array
+    , base >=4.7 && <5
     , containers
     , mtl
     , recap
