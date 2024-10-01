@@ -13,3 +13,5 @@ expr1 = LetIn "x" (Const 4) (LetIn "y" (Const 5) (BinOp Plus (Var "x") (Var "y")
 expr2 = LetIn "x" (Const 4) (LetIn "y" (Const 5) (Var "x"))
 
 expr3 = LetIn "x" (Const 4) (LetIn "x" (Const 5) (Var "x"))
+
+expr4 = LetIn "x" (Const 4) (BinOp Plus (Var "x") (Var "y"))
