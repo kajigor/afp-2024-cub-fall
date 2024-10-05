@@ -8,6 +8,8 @@ exprTypeError = If (Write (Const 3)) (LetIn "x" (Const 4) (Var "x")) (Const 3)
 
 exprUndefinedVar = If (Const 0) (LetIn "x" (Const 4) (Var "y")) (Const 3)
 
+exprUndefinedVar1 = If (Const 0) (LetIn "x" (Const 4) (LetIn "z" (BinOp Plus (Const 1) (Const 3)) (Var "y"))) (Const 3)
+
 expr1 = LetIn "x" (Const 4) (LetIn "y" (Const 5) (BinOp Plus (Var "x") (Var "y")))
 
 expr2 = LetIn "x" (Const 4) (LetIn "y" (Const 5) (Var "x"))
