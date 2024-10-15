@@ -7,7 +7,9 @@ method cube_root(N: nat) returns (r: nat)
 {
   r := 0;
   while cube(r + 1) <= N
-    
+    invariant forall k :: 0 <= k <= r ==> cube(k) <= N
+    invariant 0 <= r <= N
+    invariant cube(N) >= N
   {
     r := r + 1;
   }
@@ -21,6 +23,8 @@ method is_cube(n: nat) returns (r: bool)
     if cube(root) == n {
         r := true;
     } else {
+        assert forall i, j :: 0 <= i < j <= n ==> cube(i) < cube(j);
+        assert cube(root) < n < cube(root + 1);
         r := false;
     }
 }

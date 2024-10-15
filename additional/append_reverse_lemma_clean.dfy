@@ -11,9 +11,14 @@ lemma ReverseAppendDistr(xs: seq<nat>, ys: seq<nat>)
     if { // pattern-matching on xs
         case xs == [] => { 
             // fill in the proof here
+            assert ys == [] + ys;
         }
         case xs != [] => {
             // fill in the proof here
+            assert reverse((xs + ys)[1..]) == reverse(ys) + reverse(xs[1..]) by {
+                assert (xs + ys)[1..] == xs[1..] + ys;
+                ReverseAppendDistr(xs[1..], ys);
+            }
         }
     }
 }
