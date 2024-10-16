@@ -60,7 +60,7 @@ data SafeExpr t i where
   Skip ::
     SafeExpr () i
 
-data Error = ParsingErr String
+data Error = ParsingErr String | UndefinedVariable String
   deriving (Eq, Show)
 
 data SizedList v s where
@@ -74,22 +74,29 @@ defineAction op = case op of
   L.Plus -> (+)
   L.Minus -> (-)
 
+
+
+getAtInd :: GEQ l (S ind) -> SizedList Int l -> Int
+getAtInd (GEQS GEQZ) (Cons h tail) = h
+getAtInd (GEQS (GEQS proof)) (Cons h tail) = getAtInd (GEQS proof) tail
+
+
 evalExpr :: Show t => GEQ i ie -> SafeExpr t ie -> EvalM i t
 evalExpr geq (Const x) = lift $ lift $ return x
 
 evalExpr geqE (Var geqI iv) = do
   -- В данном случае geqI -- внутреннее доказательство того, что переменная
-  -- с индексом iv ссылается на РЕАЛЬНОЕ значение в стеке из значений
+  -- с именем iv ссылается на РЕАЛЬНОЕ значение в стеке из значений
   -- А geqE задает НОВЫЙ размер стека
 
   -- Проверяем, что мы не уменьшаем размер стека переменных
-  let _ = geqTrans geqE geqI
+  let proof = geqTrans geqE geqI
 
   value <- Control.Monad.State.get
 
-  case value of
-    Nil -> lift $ throwE $ ParsingErr "Something went wrong. This variable does not exist"
-    Cons v tail -> lift $ lift $ return v
+  let extractedValue = getAtInd proof value
+
+  return extractedValue
 
 
 evalExpr geq (BinOp op expr1 expr2) = do
@@ -157,5 +164,10 @@ data SafeCompileError = UndefinedVar String
 
 type CompileM i m = StateT (SizedList String i) (ExceptT SafeCompileError m)
 
+-- getElementByIndex :: ind -> SizedList String i -> Maybe (Safe)
+
 compile :: (Monad m) => (Numm i) => TL.TExpr t -> i -> CompileM i m (SafeExpr t i)
 compile = undefined
+  
+
+
