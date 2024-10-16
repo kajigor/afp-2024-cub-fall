@@ -164,10 +164,5 @@ data SafeCompileError = UndefinedVar String
 
 type CompileM i m = StateT (SizedList String i) (ExceptT SafeCompileError m)
 
--- getElementByIndex :: ind -> SizedList String i -> Maybe (Safe)
-
 compile :: (Monad m) => (Numm i) => TL.TExpr t -> i -> CompileM i m (SafeExpr t i)
 compile = undefined
-  
-
-
