@@ -9,7 +9,7 @@ import Control.Monad.Trans.Except (ExceptT, throwE)
 import Control.Monad.Trans.Class (lift)
 import qualified Imp.Lang as L
 import qualified Imp.TLang as TL
-import Text.Read (readMaybe, get)
+import Text.Read (readMaybe)
 import Imp.Lang (Op)
 
 data Z = Z
@@ -51,10 +51,10 @@ data SafeExpr t i where
     SafeExpr Int i
   Write ::
     Show t => SafeExpr t i -> SafeExpr () i
-  Seq ::
-    SafeExpr t i -> SafeExpr t i -> SafeExpr t i
+  Seq :: -- Why () ...?
+    SafeExpr () i -> SafeExpr t i -> SafeExpr t i
   If ::
-    SafeExpr Bool i -> SafeExpr t i -> SafeExpr t i -> SafeExpr t i
+    SafeExpr Int i -> SafeExpr t i -> SafeExpr t i -> SafeExpr t i
   LetIn ::
     String -> SafeExpr Int i -> SafeExpr t (S i) -> SafeExpr t i
   Skip ::
@@ -73,7 +73,6 @@ defineAction :: Num t => Op -> (t -> t -> t)
 defineAction op = case op of
   L.Plus -> (+)
   L.Minus -> (-)
-
 
 
 getAtInd :: GEQ l (S ind) -> SizedList Int l -> Int
@@ -120,7 +119,7 @@ evalExpr geq (If cond thn els) = do
   -- Все валидно, тупо вычисляем
   condValue <- evalExpr geq cond
 
-  branchValue <- if condValue
+  branchValue <- if condValue > 0
     then evalExpr geq thn
     else evalExpr geq els
 
@@ -164,5 +163,60 @@ data SafeCompileError = UndefinedVar String
 
 type CompileM i m = StateT (SizedList String i) (ExceptT SafeCompileError m)
 
+-- Переменная -> Список из переменных -> Выражение в индексах
+-- Идея реализации этого метода позаимстована у Mikhail Rodionychev
+findByValue :: String -> SizedList String l -> Maybe (SafeExpr Int l)
+findByValue value Nil = Nothing
+findByValue value (Cons h tail) =
+  if value == h
+    then Just $ Var (GEQS GEQZ) Z
+    else case findByValue h tail of
+      Just (Var geq l) -> Just $ Var (GEQS geq) (S l)
+      _ -> Nothing
+
+
 compile :: (Monad m) => (Numm i) => TL.TExpr t -> i -> CompileM i m (SafeExpr t i)
-compile = undefined
+compile (TL.Var name) len = do
+  context <- get
+
+  case findByValue name context of
+    Just expr -> lift $ lift $ return expr
+    Nothing -> lift $ throwE $ UndefinedVar $ name ++ " variable does not exist"
+
+compile (TL.Const v) _ = lift $ lift $ return $ Const v
+
+compile (TL.BinOp op expr1 expr2) len = do
+  compiledExpr1 <- compile expr1 len
+  compiledExpr2 <- compile expr2 len
+
+  lift $ lift $ return $ BinOp op compiledExpr1 compiledExpr2
+
+compile TL.Read _ = lift $ lift $ return Read
+
+compile (TL.Write expr) len = do
+  compiledExpr <- compile expr len
+
+  lift $ lift $ return $ Write compiledExpr
+
+compile (TL.Seq expr1 expr2) len = do
+  compiledExpr1 <- compile expr1 len
+  compiledExpr2 <- compile expr2 len
+
+  lift $ lift $ return $ Seq compiledExpr1 compiledExpr2
+
+compile (TL.If cond thn els) len = do
+  compiledCond <- compile cond len
+  compiledThn <- compile thn len
+  compiledEls <- compile els len
+
+  lift $ lift $ return $ If compiledCond compiledThn compiledEls
+
+compile (TL.LetIn name expr exprIn) len = do
+  compiledExpr <- compile expr len
+
+  list <- get
+  compiledExprIn <- lift $ fst <$> runStateT (compile exprIn (S len)) (Cons name list)
+
+  lift $ lift $ return $ LetIn name compiledExpr compiledExprIn
+
+compile TL.Skip _ = lift $ lift $ return Skip
