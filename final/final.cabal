@@ -31,6 +31,7 @@ library
       Intro.Final
       Intro.FinalBad
       Intro.Initial
+      Serialization.Final
   other-modules:
       Paths_final
   autogen-modules:

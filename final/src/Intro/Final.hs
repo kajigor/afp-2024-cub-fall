@@ -26,6 +26,16 @@ instance ExprSYM String where
   neg e = printf "(- %s)" e 
   add x y = printf "(%s + %s)" x y 
 
+newtype Prefix = Prefix { getPrefix :: String }
+
+instance ExprSYM Prefix where 
+  lit = Prefix . show 
+  neg e = Prefix $ printf "- %s" (getPrefix e)
+  add x y = Prefix $ printf "+ %s %s" (getPrefix x) (getPrefix y)
+
+prefix :: Prefix -> String 
+prefix = getPrefix 
+
 expr :: ExprSYM a => a 
 expr = add (neg (lit 13)) (lit 42)
 
@@ -39,5 +49,6 @@ main :: IO ()
 main = do 
   putStrLn $ view expr 
   print $ eval expr 
+  putStrLn $ prefix expr 
 
 
