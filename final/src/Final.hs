@@ -38,3 +38,46 @@ class Lam repr where
   lam :: (repr a -> repr b) -> repr (a -> b)
   app :: repr (a -> b) -> repr a -> repr b
   fix :: (repr a -> repr a) -> repr a
+
+
+eval :: Env a -> a
+eval = unEnv
+
+view :: S a -> String
+view x = evalState (unS x) (VarState 0)
+
+andOp :: (Cond repr) => repr Bool -> repr Bool -> repr Bool
+andOp = boolBin (BinOp "&&" (&&))
+
+mulOp :: (Calc repr) => repr Int -> repr Int -> repr Int
+mulOp = intBin (BinOp "*" (*))
+
+addOp :: (Calc repr) => repr Int -> repr Int -> repr Int
+addOp = intBin (BinOp "+" (+))
+
+leqOp :: (Cond repr) => repr Int -> repr Int -> repr Bool
+leqOp = compare (BinOp "<=" (<=))
+
+tipow :: (Cond repr, Calc repr, Lam repr) => repr (Int -> Int -> Int)
+tipow =
+  lam
+    ( \x ->
+        fix
+          ( \self ->
+              lam
+                ( \n ->
+                    ifExpr
+                      (leqOp n (intConst 0))
+                      (intConst 1)
+                      (mulOp x (app self (addOp n (intConst (-1)))))
+                )
+          )
+    )
+
+tipowApplied :: (Cond repr, Calc repr, Lam repr) => Int -> Int -> repr Int
+tipowApplied x y = app (app tipow (intConst x)) (intConst y)
+
+main = do
+  let expr = tipowApplied 4 2
+  putStrLn $ view expr
+  putStrLn $ show $ eval expr
