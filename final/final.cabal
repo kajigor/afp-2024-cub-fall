@@ -25,13 +25,18 @@ source-repository head
 
 library
   exposed-modules:
+      Common
       ExpressionProblem.Final
       ExpressionProblem.InitialMul
       ExpressionProblem.InitialWithOld
+      Final
+      Initial
       Intro.Final
       Intro.FinalBad
       Intro.Initial
+      Lambda
       Serialization.Final
+      Tagged
   other-modules:
       Paths_final
   autogen-modules:
@@ -41,6 +46,8 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , containers
+    , mtl
   default-language: Haskell2010
 
 executable final-exe
@@ -54,7 +61,9 @@ executable final-exe
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , final
+    , mtl
   default-language: Haskell2010
 
 test-suite final-test
@@ -69,5 +78,7 @@ test-suite final-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , final
+    , mtl
   default-language: Haskell2010
