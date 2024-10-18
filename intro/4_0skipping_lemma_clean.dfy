@@ -37,8 +37,13 @@ lemma SkippingLemma(a: array<int>, j: int) //  {:axiom}
 {
   // here, iterating over the loop we can inductively prove the postcondition
   var i := j;
+  if a[j] == 0 { return; }
+  i := i + 1;
   while i < j + a[j] && i < a.Length
     // add here invariants to prove post-conditions
+    invariant i <= a.Length
+    invariant j + a[j] <= i - 1 + a[i - 1]
+    invariant forall k :: j <= k < i && k < a.Length ==> a[k] != 0
   {
     i := i + 1;
   }
@@ -53,9 +58,10 @@ method FindZero(a: array<int>) returns (index: int)
 {
   index := 0;
   while index < a.Length
-    // add invariants
+    invariant forall i :: 0 <= i < index && i < a.Length ==> a[i] != 0 
   {
     if a[index] == 0 { return; }
+    SkippingLemma(a, index);
     index := index + a[index];
   }
   index := -1;

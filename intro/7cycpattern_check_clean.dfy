@@ -1,6 +1,6 @@
 predicate IsSubstring(s: string, sub: string)
 {
-  |s| >= |sub| && exists i :: 0 <= i <= |s| - |sub| && s[i..i+|sub|] == sub
+  |s| >= |sub| && exists i {:trigger s[i..i+|sub|]} :: 0 <= i <= |s| - |sub| && s[i..i+|sub|] == sub
   // Here, you can see a warning about brittle verification
   // The cause is - possibly infinite number of formula instantiations
   // One way of overcoming this is to add so-called trigger expressions
@@ -25,6 +25,8 @@ method CycpatternCheck(word: string, pattern: string) returns (result: bool)
   var i := 0;
   while i <= |pattern|
     // add the invariants
+    invariant 0 <= i <= |pattern| + 1
+    invariant forall j :: 0 <= j < i ==> !IsSubstring(word, RotateString(pattern, j))
   {
     if IsSubstring(word, RotateString(pattern, i)) {
       return true;
