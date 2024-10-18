@@ -29,14 +29,28 @@ method hasPathSum(root: TreeNode, targetSum: int) returns (b: bool)
         return false;
     }
 
-    if (root.val - targetSum == 0 && root.left == Nil && root.right == Nil) {
-        // add asserts that [root] is a path and it has desirable sum
-       return true;
+    if (root.val - targetSum == 0) {
+        assert isPath([root], root);
+        assert pathSum([root]) == targetSum;
+        return true;
     }
     var leftPath := hasPathSum(root.left, targetSum-root.val);
     var rightPath := hasPathSum(root.right, targetSum-root.val);
 
     // add asserts for induction step from root.left to root (same for root.right)
+    if (leftPath) {
+        var p: seq<TreeNode> :| isPath(p, root.left) && pathSum(p) == targetSum - root.val;
+        p := [root] + p;
+        assert isPath(p, root);
+        assert pathSum(p) == targetSum;
+    }
+
+    if (rightPath) {
+        var p: seq<TreeNode> :| isPath(p, root.right) && pathSum(p) == targetSum - root.val;
+        p := [root] + p;
+        assert isPath(p, root);
+        assert pathSum(p) == targetSum;
+    }
 
     return leftPath || rightPath;
 }
