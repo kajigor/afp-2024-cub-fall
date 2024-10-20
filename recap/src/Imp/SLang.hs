@@ -38,31 +38,23 @@ data SafeExpr t i where
     SafeExpr Int i
   Const :: Int -> SafeExpr Int i
   BinOp ::
-    GEQ i li ->
-    GEQ i ri ->
     L.Op ->
-    SafeExpr Int li ->
-    SafeExpr Int ri ->
+    SafeExpr Int i ->
+    SafeExpr Int i ->
     SafeExpr Int i
   Read :: SafeExpr Int i
   Write :: SafeExpr Int i -> SafeExpr () i
   Seq ::
-    GEQ i li ->
-    GEQ i ri ->
-    SafeExpr () li ->
-    SafeExpr t ri ->
+    SafeExpr () i ->
+    SafeExpr t i ->
     SafeExpr t i
   If ::
-    GEQ i ci ->
-    GEQ i ti ->
-    GEQ i ei ->
-    SafeExpr Int ci ->
-    SafeExpr a ti ->
-    SafeExpr a ei ->
+    SafeExpr Int i ->
+    SafeExpr a i ->
+    SafeExpr a i ->
     SafeExpr a i
   LetIn ::
-    GEQ i ei ->
-    SafeExpr Int ei ->
+    SafeExpr Int i ->
     SafeExpr a (S i) ->
     SafeExpr a i
   Skip :: SafeExpr () i
@@ -93,9 +85,9 @@ evalExpr :: GEQ i ie -> SafeExpr t ie -> EvalM i t
 evalExpr igie (Var igiv _) = do
   gets (getElem (geqTrans igie igiv))
 evalExpr _ (Const x) = return x
-evalExpr igie (BinOp iegli iegri op le re) = do
-  x <- evalExpr (geqTrans igie iegli) le
-  y <- evalExpr (geqTrans igie iegri) re
+evalExpr igie (BinOp op le re) = do
+  x <- evalExpr igie le
+  y <- evalExpr igie re
   case op of
     L.Plus -> return (x + y)
     L.Minus -> return (x - y)
@@ -107,16 +99,15 @@ evalExpr _ Read = do
 evalExpr igie (Write e) = do
   x <- evalExpr igie e
   lift $ lift $ print x
-evalExpr igie (Seq iegli iegri le re) =
-  evalExpr (geqTrans igie iegli) le
-    >> evalExpr (geqTrans igie iegri) re
-evalExpr igie (If iegic iegit iegie c t e) = do
-  x <- evalExpr (geqTrans igie iegic) c
+evalExpr igie (Seq le re) =
+  evalExpr igie le >> evalExpr igie re
+evalExpr igie (If c t e) = do
+  x <- evalExpr igie c
   case x of
-    0 -> evalExpr (geqTrans igie iegit) t
-    _ -> evalExpr (geqTrans igie iegie) e
-evalExpr igie (LetIn iegvie ve e) = do
-  x <- evalExpr (geqTrans igie iegvie) ve
+    0 -> evalExpr igie t
+    _ -> evalExpr igie e
+evalExpr igie (LetIn ve e) = do
+  x <- evalExpr igie ve
   ns <- gets (Cons x)
   lift $ evalStateT (evalExpr (GEQS igie) e) ns
 evalExpr _ Skip = return ()
@@ -135,18 +126,18 @@ compile (TL.Var s) _ = do
 compile (TL.Const x) _ =
   return $ Const x
 compile (TL.BinOp op e1 e2) i = do
-  BinOp geqRefl geqRefl op <$> compile e1 i <*> compile e2 i
+  BinOp op <$> compile e1 i <*> compile e2 i
 compile TL.Read _ =
   return Read
 compile (TL.Write e) i =
   Write <$> compile e i
 compile (TL.Seq e1 e2) i =
-  Seq geqRefl geqRefl <$> compile e1 i <*> compile e2 i
+  Seq <$> compile e1 i <*> compile e2 i
 compile (TL.If c t e) i =
-  If geqRefl geqRefl geqRefl <$> compile c i <*> compile t i <*> compile e i
+  If <$> compile c i <*> compile t i <*> compile e i
 compile (TL.LetIn s e1 e2) i = do
   e1c <- compile e1 i
   ns <- gets (Cons s)
   e2c <- lift $ evalStateT (compile e2 (S i)) ns
-  return $ LetIn geqRefl e1c e2c
+  return $ LetIn e1c e2c
 compile TL.Skip _ = return Skip
