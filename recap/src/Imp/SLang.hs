@@ -132,24 +132,18 @@ compile (TL.Var s) _ = do
   case vi of
     Just (BoundBy igiv iv) -> return $ Var igiv iv
     Nothing -> lift $ throwE $ UndefinedVar s
-compile (TL.Const x) _ = return $ Const x
+compile (TL.Const x) _ =
+  return $ Const x
 compile (TL.BinOp op e1 e2) i = do
-  e1c <- compile e1 i
-  e2c <- compile e2 i
-  return $ BinOp geqRefl geqRefl op e1c e2c
-compile TL.Read _ = return Read
-compile (TL.Write e) i = do
-  ec <- compile e i
-  return $ Write ec
-compile (TL.Seq e1 e2) i = do
-  e1c <- compile e1 i
-  e2c <- compile e2 i
-  return $ Seq geqRefl geqRefl e1c e2c
-compile (TL.If c t e) i = do
-  cc <- compile c i
-  tc <- compile t i
-  ec <- compile e i
-  return $ If geqRefl geqRefl geqRefl cc tc ec
+  BinOp geqRefl geqRefl op <$> compile e1 i <*> compile e2 i
+compile TL.Read _ =
+  return Read
+compile (TL.Write e) i =
+  Write <$> compile e i
+compile (TL.Seq e1 e2) i =
+  Seq geqRefl geqRefl <$> compile e1 i <*> compile e2 i
+compile (TL.If c t e) i =
+  If geqRefl geqRefl geqRefl <$> compile c i <*> compile t i <*> compile e i
 compile (TL.LetIn s e1 e2) i = do
   e1c <- compile e1 i
   ns <- gets (Cons s)
