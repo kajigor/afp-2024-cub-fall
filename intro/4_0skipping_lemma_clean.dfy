@@ -1,9 +1,9 @@
 // In previous examples of lemmas we used only equations and asserts.
-// However, lemmas allow more broad functionality. 
-// For example, we can iterate over the loop to prove postconditions of lemma (like in methods). 
+// However, lemmas allow more broad functionality.
+// For example, we can iterate over the loop to prove postconditions of lemma (like in methods).
 
 // What makes this problem interesting is that the
-// array we are searching in has two special properties: all elements are nonnegative, 
+// array we are searching in has two special properties: all elements are nonnegative,
 // and each successive element decreases by at most one from the
 // previous element.
 
@@ -14,8 +14,8 @@
 // let's prove our search is correct
 
 
-// when using only assertions we can prove `forall` postcondition only for limited range 
-lemma SkippingLemma0(a: array<int>, j: int) 
+// when using only assertions we can prove `forall` postcondition only for limited range
+lemma SkippingLemma0(a: array<int>, j: int)
   requires forall i :: 0 <= i < a.Length ==> 0 <= a[i]
   requires forall i :: 0 < i < a.Length ==> a[i - 1] - 1 <= a[i]
   requires 0 <= j < a.Length - 3
@@ -28,8 +28,8 @@ lemma SkippingLemma0(a: array<int>, j: int)
 }
 
 // however, we can use `while` loops as in usual methods
-// in lemmas we can also use `if`, `match` and other constructs 
-lemma SkippingLemma(a: array<int>, j: int) //  {:axiom} 
+// in lemmas we can also use `if`, `match` and other constructs
+lemma SkippingLemma(a: array<int>, j: int) //  {:axiom}
   requires forall i :: 0 <= i < a.Length ==> 0 <= a[i]
   requires forall i :: 0 < i < a.Length ==> a[i - 1] - 1 <= a[i]
   requires 0 <= j < a.Length
@@ -38,7 +38,8 @@ lemma SkippingLemma(a: array<int>, j: int) //  {:axiom}
   // here, iterating over the loop we can inductively prove the postcondition
   var i := j;
   while i < j + a[j] && i < a.Length
-    // add here invariants to prove post-conditions
+    invariant j <= i && i < a.Length ==> a[j] - i + j <= a[i]
+    invariant forall k :: j <= k < i && k < a.Length ==> a[k] != 0
   {
     i := i + 1;
   }
@@ -53,9 +54,12 @@ method FindZero(a: array<int>) returns (index: int)
 {
   index := 0;
   while index < a.Length
-    // add invariants
+    invariant forall i :: 0 <= i < index && i < a.Length ==> a[i] != 0
   {
     if a[index] == 0 { return; }
+    assert forall i :: index <= i < index + a[index] && i < a.Length ==> a[i] != 0 by {
+      SkippingLemma(a, index);
+    }
     index := index + a[index];
   }
   index := -1;
