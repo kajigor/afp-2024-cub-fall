@@ -39,6 +39,8 @@ lemma SkippingLemma(a: array<int>, j: int) //  {:axiom}
   var i := j;
   while i < j + a[j] && i < a.Length
     // add here invariants to prove post-conditions
+    invariant j <= i && i < a.Length ==> a[j] + j <= a[i] + i
+    invariant forall k :: j <= k < i && k < a.Length ==> a[k] != 0
   {
     i := i + 1;
   }
@@ -53,8 +55,9 @@ method FindZero(a: array<int>) returns (index: int)
 {
   index := 0;
   while index < a.Length
-    // add invariants
+    invariant forall k :: 0 <= k < index && k < a.Length ==> a[k] != 0
   {
+    SkippingLemma(a, index);
     if a[index] == 0 { return; }
     index := index + a[index];
   }
