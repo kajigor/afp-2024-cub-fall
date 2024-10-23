@@ -16,7 +16,13 @@ method MaxSegSum(a: seq<int>) returns (k: int, m: int)
   var n := 0;
   var c, t := 0, 0;  
   while n < |a|
-     // add invariants
+    // add invariants
+    invariant 0 <= c <= n <= |a|
+    invariant k <= m <= |a|
+    invariant s == Sum(a, k, m)
+    invariant t == Sum(a, c, n)
+    invariant forall i :: 0 <= i <= n ==> Sum(a, c, n) >= Sum(a, i, n)
+    invariant forall i,j :: 0 <= i <= j <= n ==> s >= Sum(a, i, j)
   {
     t, n := t + a[n], n + 1;
     if t < 0 {

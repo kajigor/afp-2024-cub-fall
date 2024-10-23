@@ -25,6 +25,7 @@ method CycpatternCheck(word: string, pattern: string) returns (result: bool)
   var i := 0;
   while i <= |pattern|
     // add the invariants
+    invariant forall k :: 0 <= k < i && k <= |pattern| ==> !IsSubstring(word, RotateString(pattern, k))
   {
     if IsSubstring(word, RotateString(pattern, i)) {
       return true;

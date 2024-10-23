@@ -45,6 +45,7 @@ lemma psum_property(s: seq<int>, i: int)
         psum(s[.. (i + 1)]);
         psum(s[.. (i + 1)][.. (i + 1) - 1]) + s[.. (i + 1)][(i + 1) - 1];
         { assert s[.. (i + 1)][.. (i + 1) - 1] == s[.. i]; }
+        { assert psum(s[.. (i + 1)][.. (i + 1) - 1]) == psum(s[..i]); }
         psum(s[.. i]) + s[i];
     }
 }
