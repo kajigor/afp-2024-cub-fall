@@ -14,6 +14,7 @@
 // let's prove our search is correct
 
 
+
 // when using only assertions we can prove `forall` postcondition only for limited range 
 lemma SkippingLemma0(a: array<int>, j: int) 
   requires forall i :: 0 <= i < a.Length ==> 0 <= a[i]
@@ -37,7 +38,26 @@ lemma SkippingLemma(a: array<int>, j: int) //  {:axiom}
 {
   // here, iterating over the loop we can inductively prove the postcondition
   var i := j;
+  if a[j] == 0 { 
+    //  a[j] == 0, forall i in [j, j + 0) -> a[j] != 0
+    // don't have loop
+    return; 
+  } 
+ 
+  // i := j + 1;
   while i < j + a[j] && i < a.Length
+
+
+    // a[i] != 0, forall j in [i, i + a[i]) -> a[j] != 0
+    
+    // a[i - 1] - 1 <= a[i]
+    // invariant (i < a.Length - 1) ==> a[i] - 1 <= a[i + 1]
+    // invariant a[j] - 1 <= a[j + 1]
+    // invariant a[j] - (i - j) <= a[j + (i - j)]
+
+    // invariant forall k :: 0 < k < a.Length ==> a[j] - k + j <= a[k] 
+    invariant (i < a.Length) ==> a[j] - (i - j) <= a[i] 
+    invariant forall k :: j <= k < i && k < a.Length ==> a[k] != 0
     // add here invariants to prove post-conditions
   {
     i := i + 1;
@@ -53,9 +73,11 @@ method FindZero(a: array<int>) returns (index: int)
 {
   index := 0;
   while index < a.Length
-    // add invariants
+    invariant 0 <= index 
+    invariant forall j :: 0 <= j < index && j < a.Length ==> a[j] != 0
   {
     if a[index] == 0 { return; }
+    SkippingLemma(a, index);
     index := index + a[index];
   }
   index := -1;

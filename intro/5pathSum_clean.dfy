@@ -31,12 +31,25 @@ method hasPathSum(root: TreeNode, targetSum: int) returns (b: bool)
 
     if (root.val - targetSum == 0 && root.left == Nil && root.right == Nil) {
         // add asserts that [root] is a path and it has desirable sum
+        assert isPath([root], root);
+        assert pathSum([root]) == targetSum;
        return true;
     }
     var leftPath := hasPathSum(root.left, targetSum-root.val);
     var rightPath := hasPathSum(root.right, targetSum-root.val);
 
     // add asserts for induction step from root.left to root (same for root.right)
+    if (leftPath == true){
+        assert exists p: seq<TreeNode> :: 
+        isPath(p, root.left) && (pathSum(p) + root.val) == targetSum
+        && isPath([root] + p, root);
+    }
+
+    if (rightPath == true){
+        assert exists p: seq<TreeNode> :: 
+        isPath(p, root.right) && (pathSum(p) + root.val) == targetSum
+        && isPath([root] + p, root);
+    }
 
     return leftPath || rightPath;
 }

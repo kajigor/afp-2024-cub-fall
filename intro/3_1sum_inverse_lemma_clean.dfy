@@ -11,8 +11,14 @@ lemma sum_prop(s: seq<int>)
     requires |s| > 0
     ensures sum(s) == sum(s[..|s| - 1]) + s[ |s| - 1 ]
 {
-    if (|s| > 1) {
-        // add an assetion to prove lemma
+    if (|s| > 1){
+        calc == {
+            sum(s);
+            s[0] + sum(s[1..]);
+            {assert  s[1..] == s[1..|s|];}
+            assert s[..|s| - 1][1..] == s[1..][..|s| - 2];
+            sum(s[..|s| - 1]) + s[ |s| - 1 ];
+        }
     }
 }
 
@@ -21,14 +27,17 @@ method sum_method(numbers: seq<int>) returns (s : int)
  {
     s := 0;
     for i := 0 to |numbers|
-        // add invariant, stating that `s` is equal to the sum on prefix
+        invariant 0 <= i <= |numbers| 
+        invariant s == sum(numbers[.. i])   
     {
-        assert sum(numbers[..i + 1]) == sum(numbers[..i]) + numbers[i] by {
-            // prove the induction step in `by {}` block
-            // in an example of 3_0lemma_below_zero we invoke lemma in such block to prove assert
-            // here, you should do approximately the same, but with some helpful assertions
-        }
+        // here, you can write auxiliary assertions about the sum and product
+        assert s == sum(numbers[.. i]);
+        sum_prop(numbers[.. i + 1]);
         s := s + numbers[i];
+        sum_prop(numbers[.. i + 1]);
+        assert numbers[.. (i + 1)][..i] == numbers[.. i];
+        assert sum(numbers[.. i + 1]) == sum(numbers[.. i]) + numbers[i];
+    
     }
 
     return s;
