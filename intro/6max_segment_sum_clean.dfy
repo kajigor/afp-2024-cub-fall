@@ -17,14 +17,13 @@ method MaxSegSum(a: seq<int>) returns (k: int, m: int)
   var c, t := 0, 0;  
   while n < |a|
      // add invariants
-    invariant n < |a| + 1
-    invariant 0 <= c <= n 
+    invariant 0 <= c <= n < |a| + 1
     invariant 0 <= k <= m < |a| + 1
     invariant s == Sum(a, k, m)
     invariant t == Sum(a, c, n)
-    invariant forall j :: 0 <= c <= j < n ==> Sum(a, j, n) <= t 
-    // invariant forall j :: 0 <= c <= j < n ==> Sum(a, c, j) <= t
-    invariant forall p,q :: 0 <= p <= q < n ==> Sum(a, p, q) <= s
+    invariant forall p :: c <= p < n ==> Sum(a, p, n) <= t 
+    invariant forall p :: 0 <= p < n ==> Sum(a, p, n) <= t 
+    invariant forall p,q :: 0 <= p <= q <= n ==> Sum(a, p, q) <= s
   {
     t, n := t + a[n], n + 1;
     if t < 0 {
@@ -34,7 +33,3 @@ method MaxSegSum(a: seq<int>) returns (k: int, m: int)
     }
   }
 }
-
-// 1 2 3 8 1 0 6 7
-// k = 0 m = 0 s = 0 c = 0 t = 1 
-// n = 1
