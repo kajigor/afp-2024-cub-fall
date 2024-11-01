@@ -14,17 +14,24 @@ f2' = curry f2
 f3 :: (Int, Int, Int) -> Int
 f3 (a, b, c) = a + b + c
 
--- $(makeCurryUntyped 3)
+$(makeCurryUntyped 3)
 
--- f3 :: Int -> Int -> Int -> Int
--- f3' = curry3 f3
+f3' :: Int -> Int -> Int -> Int
+f3' = curry3 f3
 
--- $(makeCurry 4)
+$(makeCurry 4)
 
 f4 :: (Int, Int, Int, Int) -> Int
 f4 (a, b, c, d) = a + b + c + d
 
--- f4' = curry4 f4
+f4' = curry4 f4
 
--- f4'' :: (Int, Int, Int, Int) -> Int
--- f4'' = uncurry4 f'
+$(makeUncurryUntyped 4)
+
+f4'' :: (Int, Int, Int, Int) -> Int
+f4'' = uncurry4 f4'
+
+
+$(makeUncurry 3)
+
+f3'' = uncurry3 f3'
