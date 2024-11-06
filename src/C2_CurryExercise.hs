@@ -28,19 +28,15 @@ makeCurrySig :: Int -> Q Dec
 makeCurrySig n = do
     let y = mkName "y"
     xs <- replicateM n (newName "x")
-    -- fIn <- arrowT <$> (tupleT n <*> (varT <$> xs)) <*> (varT y) 
-    let fIn = [t| $(foldl (\a b -> appT a (varT b)) (tupleT n) xs) -> $(varT y) |]
-    -- x <- [t| $(varT y) -> $(varT y) |]
+    let fIn = [t| $(foldl appT (tupleT n) (varT <$> xs)) -> $(varT y) |]
     let fOut = func (varT <$> xs) (varT y)
-    sigD (curryName n) -- liftAn :: 
+    sigD (curryName n)
         (
             forallT (tv y : (tv <$> xs))
             (cxt [] )
-            [t| $fIn -> $fOut |] -- (x0 -> x1 -> ... -> xn -> y) -> (app x0 -> app x1 -> ... -> app xn -> app y)
+            [t| $fIn -> $fOut |]
         )
-    -- return undefined
     where
-        tv :: Name -> TyVarBndr Specificity
         tv x = PlainTV x specifiedSpec
         func xs y = foldr (\a b -> [t| $a -> $b |]) y xs
 
