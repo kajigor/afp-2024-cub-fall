@@ -16,15 +16,21 @@ f3 (a, b, c) = a + b + c
 
 -- $(makeCurryUntyped 3)
 
--- f3 :: Int -> Int -> Int -> Int
+-- f3' :: Int -> Int -> Int -> Int
 -- f3' = curry3 f3
 
--- $(makeCurry 4)
+$(makeCurry 4)
 
 f4 :: (Int, Int, Int, Int) -> Int
 f4 (a, b, c, d) = a + b + c + d
 
--- f4' = curry4 f4
+f4' :: Int -> Int -> Int -> Int -> Int
+f4' = curry4 f4
 
--- f4'' :: (Int, Int, Int, Int) -> Int
--- f4'' = uncurry4 f'
+$(makeUncurry 4)
+
+f4'' :: (Int, Int, Int, Int) -> Int
+f4'' = uncurry4 f4'
+
+uncurryTest :: Int
+uncurryTest = f4'' (1, 2, 3, 4) -- 10
