@@ -2,29 +2,51 @@
 module C2_CurryExercise where 
 
 import Language.Haskell.TH
+import Control.Monad (replicateM)
 
 -- task 1: Implement generalized curry splice (inferred types)
 
 curryName :: Int -> Name
 curryName n = mkName $ "curry" ++ show n
 
-makeCurryBody :: Int -> Q Exp
-makeCurryBody n = undefined
+makeCurryBody :: Name -> [Name] -> Int -> Q Exp
+makeCurryBody f xs n = appE (varE f) (tupE $ varE <$> xs)
 
 makeCurryDec :: Int -> Q Dec
-makeCurryDec n = undefined
+makeCurryDec n = do
+    f  <- newName "f"
+    xs <- replicateM n (newName "x")
+    funD (curryName n) [clause (varP f:(varP <$> xs)) (normalB $ makeCurryBody f xs n) []]
 
 makeCurryUntyped :: Int -> Q [Dec]
-makeCurryUntyped n = undefined
+makeCurryUntyped n = return <$> makeCurryDec n
 
 
 -- task 2: Add explicity signature to curry
 
 makeCurrySig :: Int -> Q Dec
-makeCurrySig = undefined
+makeCurrySig n = do
+    let y = mkName "y"
+    xs <- replicateM n (newName "x")
+    -- fIn <- arrowT <$> (tupleT n <*> (varT <$> xs)) <*> (varT y) 
+    let fIn = [t| $(foldl (\a b -> appT a (varT b)) (tupleT n) xs) -> $(varT y) |]
+    -- x <- [t| $(varT y) -> $(varT y) |]
+    let fOut = func (varT <$> xs) (varT y)
+    sigD (curryName n) -- liftAn :: 
+        (
+            forallT (tv y : (tv <$> xs))
+            (cxt [] )
+            [t| $fIn -> $fOut |] -- (x0 -> x1 -> ... -> xn -> y) -> (app x0 -> app x1 -> ... -> app xn -> app y)
+        )
+    -- return undefined
+    where
+        tv :: Name -> TyVarBndr Specificity
+        tv x = PlainTV x specifiedSpec
+        func xs y = foldr (\a b -> [t| $a -> $b |]) y xs
+
 
 makeCurry :: Int -> Q [Dec]
-makeCurry n = undefined
+makeCurry n = sequence [makeCurrySig n, makeCurryDec n]
 
 
 
