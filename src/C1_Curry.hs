@@ -25,5 +25,11 @@ f4 (a, b, c, d) = a + b + c + d
 
 f4' = curry4 f4
 
--- f4'' :: (Int, Int, Int, Int) -> Int
--- f4'' = uncurry4 f'
+$(makeUncurryUntyped 3)
+
+f3'' = uncurry f3'
+
+$(makeUncurry 4)
+
+f4'' :: (Int, Int, Int, Int) -> Int
+f4'' = uncurry4 f4'

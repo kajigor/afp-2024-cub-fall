@@ -31,6 +31,8 @@ library
       C2_CurryExercise
       D1_Embedding
       D2_EmbeddingExample
+      E1_Logging
+      E2_LoggingExercise
   other-modules:
       Paths_TemplateHaskellDemo
   autogen-modules:
