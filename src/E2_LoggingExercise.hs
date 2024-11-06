@@ -41,7 +41,7 @@ generateLoggingFunction :: Name -> Q [Dec]
 generateLoggingFunction name = sequence [generateLoggingFunctionSig name, generateLoggingFunctionDec name]
 
 generateLoggingFunctions :: [Name] -> Q [Dec]
-generateLoggingFunctions names = mapM generateLoggingFunctionDec names
+generateLoggingFunctions names = concat <$> mapM generateLoggingFunction names
 
 split :: Type -> ([Type], Type)
 split (AppT (AppT ArrowT arg) xs) = first (arg :) $ split xs
