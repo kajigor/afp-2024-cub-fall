@@ -17,7 +17,11 @@ test2 a b = case readMaybe b of
     Nothing -> Nothing
     Just x -> Just $ a + x 
 
-test3 :: (Show b) => Int -> b -> String
-test3 a b = show a ++ " " ++ show b
 
-$(generateLoggingFunctions ['test1])
+$(generateLoggingFunctions ['test1, 'test2])
+
+logs :: String
+logs = fst $ do
+    _ <- test1Logged 1 2
+    _ <- test2Logged 1 "3"
+    return ()

@@ -4,6 +4,7 @@ module E2_LoggingExercise where
 import Language.Haskell.TH
 import Control.Monad (replicateM)
 import Data.Bifunctor (first)
+import Text.Printf (printf)
 
 generateLoggingFunctionName :: Name -> Name
 generateLoggingFunctionName originalName = mkName $ nameBase originalName ++ "Logged"
@@ -11,7 +12,7 @@ generateLoggingFunctionName originalName = mkName $ nameBase originalName ++ "Lo
 generateLoggingFunctionSig :: Name -> Q Dec
 generateLoggingFunctionSig originalName = do
     (argsTypes, retType) <- split <$> reifyType originalName
-    sigD (generateLoggingFunctionName originalName) $ func (return <$> argsTypes) [t| ($(return retType), String) |]
+    sigD (generateLoggingFunctionName originalName) $ func (return <$> argsTypes) [t| (String, $(return retType)) |]
     where
         func xs y = foldr (\a b -> [t| $a -> $b |]) y xs
 
@@ -20,9 +21,9 @@ generateLoggingFunctionBody original args = do
     let call = foldl appE (varE original) $ varE <$> args
     [|
         do
-            let a = show $(listE (varE <$> args))
+            let a = show $(tupE (varE <$> args))
             let res = $call
-            (res, $(litE $ stringL $ nameBase original) <> " " <> a <> " " <> show res)
+            ($(varE 'printf) "%s%s = %s\n" $(litE $ stringL $ nameBase original) a (show res), res)
         |]
 
 generateLoggingFunctionDec :: Name -> Q Dec
