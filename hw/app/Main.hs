@@ -2,6 +2,7 @@ module Main where
 import Criterion.Main
 import Weigh
 import TreeFusion (BinaryTree(..), binaryTreeTest, fusedBinaryTreeFoldrBuildTest, fusedBinaryTreeStreamTest)
+import TreeFusion (mapBinaryTreeFoldrBuild, filterBinaryTreeFoldrBuild, sqr)
 
 n :: Int
 n = 1000000
@@ -15,14 +16,14 @@ sampleBinaryTree = go [1..n]
 memoryBenchmarks :: Weigh ()
 memoryBenchmarks = do
   func "not fused binary tree test" binaryTreeTest sampleBinaryTree
-  -- func "foldr/build fused binary tree test" fusedBinaryTreeFoldrBuildTest sampleBinaryTree -- uncomment this line when you implement the foldr/build version
-  -- func "stream fused binary tree test" fusedBinaryTreeStreamTest sampleBinaryTree -- uncomment this line when you implement the stream version
+  func "foldr/build fused binary tree test" fusedBinaryTreeFoldrBuildTest sampleBinaryTree -- uncomment this line when you implement the foldr/build version
+  func "stream fused binary tree test" fusedBinaryTreeStreamTest sampleBinaryTree -- uncomment this line when you implement the stream version
 
 main :: IO ()
 main = do
     defaultMain [
         bench "not fused binary tree test" $ whnf binaryTreeTest sampleBinaryTree
-        -- , bench "foldr/buils fused binary tree test" $ whnf fusedBinaryTreeFoldrBuildTest sampleBinaryTree -- uncomment this line when you implement the foldr/build version
-        -- , bench "stream fused binary tree test" $ whnf fusedBinaryTreeStreamTest sampleBinaryTree -- uncomment this line when you implement the stream version
+        , bench "foldr/build fused binary tree test" $ whnf fusedBinaryTreeFoldrBuildTest sampleBinaryTree -- uncomment this line when you implement the foldr/build version
+        , bench "stream fused binary tree test" $ whnf fusedBinaryTreeStreamTest sampleBinaryTree -- uncomment this line when you implement the stream version
         ]
     mainWith memoryBenchmarks
