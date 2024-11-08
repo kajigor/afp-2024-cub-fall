@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -13,7 +13,6 @@ author:         Author name here
 maintainer:     example@example.com
 copyright:      2024 Author name here
 license:        BSD-3-Clause
-license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
@@ -32,6 +31,8 @@ library
       C2_CurryExercise
       D1_Embedding
       D2_EmbeddingExample
+      LoggingFunctions
+      LoggingRes
   other-modules:
       Paths_TemplateHaskellDemo
   autogen-modules:
