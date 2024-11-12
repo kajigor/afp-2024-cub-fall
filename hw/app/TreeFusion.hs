@@ -8,20 +8,39 @@ data BinaryTree a = BinaryLeaf | BinaryNode a (BinaryTree a) (BinaryTree a)
 
 -- Task 1
 
-buildBinaryTree :: (forall b. (a -> b -> b) -> b -> b) -> BinaryTree a
-buildBinaryTree g = undefined
+buildBinaryTree :: (forall b. (a -> b -> b -> b) -> b -> b) -> BinaryTree a
+buildBinaryTree g = g BinaryNode BinaryLeaf
+{-# INLINE [0] buildBinaryTree #-}
 
 mapBinaryTreeFoldrBuild :: (a -> b) -> BinaryTree a -> BinaryTree b
-mapBinaryTreeFoldrBuild = undefined
+mapBinaryTreeFoldrBuild g t =
+  buildBinaryTree $ \n z -> foldrBinaryTreeFoldrBuild (n . g) z t
 
 filterBinaryTreeFoldrBuild :: (a -> Bool) -> BinaryTree a -> BinaryTree a
-filterBinaryTreeFoldrBuild = undefined
+filterBinaryTreeFoldrBuild p t =
+  buildBinaryTree $ \n z -> foldrBinaryTreeFoldrBuild (\x l r -> if p x then n x l r else z) z t
 
-foldrBinaryTreeFoldrBuild :: (b -> a -> b) -> b -> BinaryTree a -> b
-foldrBinaryTreeFoldrBuild = undefined
+{-
+I kinda don't understand: do I have to implement foldr or fold here?
+If I keep the same signature as in `foldrBinaryTreeSimple`
+it is hard to use it in `map` and `filter`.
+-}
+foldrBinaryTreeFoldrBuild :: (a -> b -> b -> b) -> b -> BinaryTree a -> b
+foldrBinaryTreeFoldrBuild _ z BinaryLeaf = z
+foldrBinaryTreeFoldrBuild g z (BinaryNode v l r) =
+  g v (foldrBinaryTreeFoldrBuild g z l) (foldrBinaryTreeFoldrBuild g z r)
+{-# INLINE [0] foldrBinaryTreeFoldrBuild #-}
 
+{-
+But with change of signature of `foldrBinaryTreeFoldrBuild`
+it is hard to translate the last fold function in this test.
+-}
 fusedBinaryTreeFoldrBuildTest :: BinaryTree Int -> Int
-fusedBinaryTreeFoldrBuildTest = undefined -- see binaryTreeTest
+fusedBinaryTreeFoldrBuildTest tree = foldrBinaryTreeFoldrBuild (\x l r -> (abs ((abs r + 1) * l) + 1) * x) 1 ((mapBinaryTreeFoldrBuild (+ 1) . filterBinaryTreeFoldrBuild (\x -> x `rem` 400 /= 0) . mapBinaryTreeFoldrBuild sqr) tree)
+
+{-# RULES
+"tree build/foldr" forall f z (g :: forall b. (a -> b -> b -> b) -> b -> b). foldrBinaryTreeFoldrBuild f z (buildBinaryTree g) = g f z
+  #-}
 
 -- Task 2
 
@@ -52,5 +71,4 @@ foldrBinaryTreeSimple _ z BinaryLeaf = z
 foldrBinaryTreeSimple f z (BinaryNode val l r) = f (foldrBinaryTreeSimple f (foldrBinaryTreeSimple f z r) l) val
 
 binaryTreeTest :: BinaryTree Int -> Int
-binaryTreeTest tree = foldrBinaryTreeSimple (\x y -> (abs x + 1) * y) 1 ((mapBinaryTreeSimple (+1) . filterBinaryTreeSimple (\x -> x `rem` 400 /= 0) . mapBinaryTreeSimple sqr) tree)
-
+binaryTreeTest tree = foldrBinaryTreeSimple (\x y -> (abs x + 1) * y) 1 ((mapBinaryTreeSimple (+ 1) . filterBinaryTreeSimple (\x -> x `rem` 400 /= 0) . mapBinaryTreeSimple sqr) tree)
