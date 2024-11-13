@@ -8,20 +8,34 @@ data BinaryTree a = BinaryLeaf | BinaryNode a (BinaryTree a) (BinaryTree a)
 
 -- Task 1
 
-buildBinaryTree :: (forall b. (a -> b -> b) -> b -> b) -> BinaryTree a
-buildBinaryTree g = undefined
+{-# RULES
+"buildBinaryTree/foldrBinaryTreeFoldrBuild" forall f z (g :: forall b. (a -> b -> b -> b) -> b -> b). foldrBinaryTreeFoldrBuild f z (buildBinaryTree g) = g f z
+#-}
+
+buildBinaryTree :: (forall b. (a -> b -> b -> b) -> b -> b) -> BinaryTree a
+buildBinaryTree g = g BinaryNode BinaryLeaf
+{-# INLINE [1] buildBinaryTree #-}
+-- changed (a -> b -> b) to (a -> b -> b -> b), because we need for build function: start element and 'wrapper' 
+-- and 'wrappper' BinaryNode has type (BinaryTree a %1 -> BinaryTree a %1 -> BinaryTree a)
 
 mapBinaryTreeFoldrBuild :: (a -> b) -> BinaryTree a -> BinaryTree b
-mapBinaryTreeFoldrBuild = undefined
+mapBinaryTreeFoldrBuild f tree = buildBinaryTree (\c n -> 
+                                      foldrBinaryTreeFoldrBuild (\a right left -> c (f a) left right) n tree)
 
 filterBinaryTreeFoldrBuild :: (a -> Bool) -> BinaryTree a -> BinaryTree a
-filterBinaryTreeFoldrBuild = undefined
+filterBinaryTreeFoldrBuild f tree = buildBinaryTree (\c n -> foldrBinaryTreeFoldrBuild (\a right left -> if f a then (c a right left) else n ) n tree)
 
-foldrBinaryTreeFoldrBuild :: (b -> a -> b) -> b -> BinaryTree a -> b
-foldrBinaryTreeFoldrBuild = undefined
+foldrBinaryTreeFoldrBuild :: (a -> b -> b -> b) -> b -> BinaryTree a -> b
+foldrBinaryTreeFoldrBuild _ st_el BinaryLeaf = st_el
+foldrBinaryTreeFoldrBuild f st_el (BinaryNode el left right) = f el (foldrBinaryTreeFoldrBuild f st_el left) (foldrBinaryTreeFoldrBuild f st_el right)
+{-# INLINE [0] foldrBinaryTreeFoldrBuild #-}
+-- also changed (b -> a -> b) to (a -> b -> b -> b), because foldr :: (a->b->b) -> b -> [a] -> b
 
 fusedBinaryTreeFoldrBuildTest :: BinaryTree Int -> Int
-fusedBinaryTreeFoldrBuildTest = undefined -- see binaryTreeTest
+fusedBinaryTreeFoldrBuildTest tree = foldrBinaryTreeFoldrBuild 
+                      (\x l r -> (abs x + 1) * l * r) 
+                      1 
+                      ((mapBinaryTreeFoldrBuild (+1) . filterBinaryTreeFoldrBuild (\x -> x `rem` 400 /= 0) . mapBinaryTreeFoldrBuild sqr) tree) -- see binaryTreeTest 
 
 -- Task 2
 
