@@ -25,10 +25,7 @@ source-repository head
 
 library
   exposed-modules:
-      Imp.Exprs
-      Imp.Lang
-      Imp.SLang
-      Imp.TLang
+      Hdl
   other-modules:
       Paths_recap
   autogen-modules:
