@@ -44,3 +44,4 @@ main = do
 
 -- Case                            Allocated  GCs
 -- not fused binary tree test    239,073,960   53
+-- build fused binary tree test   45,539,976   10
