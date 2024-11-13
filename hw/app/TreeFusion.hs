@@ -20,10 +20,10 @@ buildBinaryTree g = g BinaryNode BinaryLeaf
 
 mapBinaryTreeFoldrBuild :: (a -> b) -> BinaryTree a -> BinaryTree b
 mapBinaryTreeFoldrBuild f tree = buildBinaryTree (\c n -> 
-                                      foldrBinaryTreeFoldrBuild (\a right left -> c (f a) left right) n tree)
+                                      foldrBinaryTreeFoldrBuild (\a left right -> c (f a) left right) n tree)
 
 filterBinaryTreeFoldrBuild :: (a -> Bool) -> BinaryTree a -> BinaryTree a
-filterBinaryTreeFoldrBuild f tree = buildBinaryTree (\c n -> foldrBinaryTreeFoldrBuild (\a right left -> if f a then (c a right left) else n ) n tree)
+filterBinaryTreeFoldrBuild f tree = buildBinaryTree (\c n -> foldrBinaryTreeFoldrBuild (\a left right -> if f a then (c a right left) else n ) n tree)
 
 foldrBinaryTreeFoldrBuild :: (a -> b -> b -> b) -> b -> BinaryTree a -> b
 foldrBinaryTreeFoldrBuild _ st_el BinaryLeaf = st_el
@@ -39,18 +39,72 @@ fusedBinaryTreeFoldrBuildTest tree = foldrBinaryTreeFoldrBuild
 
 -- Task 2
 
+data Stream a = forall s. Stream (s -> Step a s) s
+
+data Step a s
+  = Yield a s s
+  | Done
+
+stream :: BinaryTree a -> Stream a 
+stream = Stream f
+  where
+    f BinaryLeaf     = Done
+    f (BinaryNode el left right) = Yield el left right
+{-# NOINLINE stream #-}
+
+unstream :: Stream a -> BinaryTree a 
+unstream (Stream f s) = go s
+  where
+    go s' = case f s' of
+      Done        -> BinaryLeaf
+      Yield x left'' right'' -> BinaryNode x (go left'') (go right'')
+{-# NOINLINE unstream #-}
+
+{-# RULES
+"stream/unstream" forall (s :: Stream a). stream (unstream s) = s
+  #-}
+
 mapBinaryTreeStream :: (a -> b) -> BinaryTree a -> BinaryTree b
-mapBinaryTreeStream = undefined
+mapBinaryTreeStream f = unstream . map3' f . stream
+
+map3' :: (a -> b) -> Stream a -> Stream b
+map3' g (Stream f s) = Stream h s
+  where
+    h s' = case f s' of
+      Done        -> Done
+      Yield x left'' right'' -> Yield (g x) left'' right''
+
 
 filterBinaryTreeStream :: (a -> Bool) -> BinaryTree a -> BinaryTree a
-filterBinaryTreeStream = undefined
+filterBinaryTreeStream f = unstream . filter3' f . stream
 
-foldrBinaryTreeStream :: (b -> a -> b) -> b -> BinaryTree a -> b
-foldrBinaryTreeStream = undefined
+filter3' :: (a -> Bool) -> Stream a -> Stream a
+filter3' p (Stream f s) = Stream g s
+  where
+    g s' = case f s' of
+      Done -> Done
+      Yield x left'' right'' ->
+        if p x
+          then Yield x left'' right''
+          else Done
+
+
+foldrBinaryTreeStream :: (a -> b -> b -> b) -> b -> BinaryTree a -> b
+foldrBinaryTreeStream f z = foldr3' f z . stream
+
+foldr3' :: (a -> b -> b -> b) -> b -> Stream a -> b
+foldr3' g b (Stream f s) = go b s
+  where
+    go b' s' = case f s' of
+      Done        -> b'
+      Yield x left'' right'' -> g x (go b' left'') (go b' right'')
 
 fusedBinaryTreeStreamTest :: BinaryTree Int -> Int
-fusedBinaryTreeStreamTest = undefined -- see binaryTreeTest
-
+fusedBinaryTreeStreamTest tree = foldrBinaryTreeStream 
+                                    (\x left right -> (abs x + 1) * left * right) 
+                                    1 
+                                    ((mapBinaryTreeStream (+1) . filterBinaryTreeStream (\x -> x `rem` 400 /= 0) . mapBinaryTreeStream sqr) tree)
+                             
 -- Naive implementations for comparing performance and logic
 
 mapBinaryTreeSimple :: (a -> b) -> BinaryTree a -> BinaryTree b
