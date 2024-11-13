@@ -16,13 +16,13 @@ memoryBenchmarks :: Weigh ()
 memoryBenchmarks = do
   func "not fused binary tree test" binaryTreeTest sampleBinaryTree
   func "foldr/build fused binary tree test" fusedBinaryTreeFoldrBuildTest sampleBinaryTree -- uncomment this line when you implement the foldr/build version
---   func "stream fused binary tree test" fusedBinaryTreeStreamTest sampleBinaryTree -- uncomment this line when you implement the stream version
+  func "stream fused binary tree test" fusedBinaryTreeStreamTest sampleBinaryTree -- uncomment this line when you implement the stream version
 
 main :: IO ()
 main = do
     defaultMain [
         bench "not fused binary tree test" $ whnf binaryTreeTest sampleBinaryTree
         , bench "foldr/buils fused binary tree test" $ whnf fusedBinaryTreeFoldrBuildTest sampleBinaryTree -- uncomment this line when you implement the foldr/build version
-        -- , bench "stream fused binary tree test" $ whnf fusedBinaryTreeStreamTest sampleBinaryTree -- uncomment this line when you implement the stream version
+        , bench "stream fused binary tree test" $ whnf fusedBinaryTreeStreamTest sampleBinaryTree -- uncomment this line when you implement the stream version
         ]
     mainWith memoryBenchmarks
