@@ -1,13 +1,19 @@
 module Main (main) where
 
-import Hdl (Hdl, addTextLineElement, addOrderedItem, writeToConsole)
+import Hdl (Hdl, 
+    addTitleLineElement,
+    addTextLineElement,
+    addOrderedItem,
+    addUnorderedItem,
+    addImageUrl,
+    writeToConsole
+    )
 
-
-uiComponents = 
-  addTextLineElement "Simple text" ++
-  addOrderedItem 1 "Carrot" ++
-  addOrderedItem 2 "Apple" ++
-  addOrderedItem 3 "Something else"
+uiComponents = do
+  addTitleLineElement "small" "Main Title"
+  addTextLineElement "Simple text"
+  addOrderedItem 1 "Carrot"
+  addOrderedItem 2 "Apple"
 
 
 main :: IO ()

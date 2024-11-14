@@ -24,6 +24,7 @@ dependencies:
 - transformers
 - mtl
 - containers
+- free
 
 ghc-options:
 - -Wall
