@@ -1,13 +1,15 @@
 module Main (main) where
 
-import Hdl (UiItem(..), TitleLevel(..), SubItemType(..), writeToConsole)
+import Hdl (Hdl, addTextLineElement, addOrderedItem, writeToConsole)
 
-uiComponents = [
-  AddTextLine "Simple text",
-  AddSubItem (Ordered 1) "Carrot",
-  AddSubItem (Ordered 2) "Apple"
-  ]
 
-main :: IO [()]
+uiComponents = 
+  addTextLineElement "Simple text" ++
+  addOrderedItem 1 "Carrot" ++
+  addOrderedItem 2 "Apple" ++
+  addOrderedItem 3 "Something else"
+
+
+main :: IO ()
 main = do
-  traverse writeToConsole uiComponents
+  writeToConsole uiComponents
