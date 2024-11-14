@@ -7,7 +7,8 @@ uiComponents = [
   AddSubItem (Ordered 1) "Carrot",
   AddSubItem (Ordered 2) "Apple"
   ]
+  
 
-main :: IO [()]
+main :: IO ()
 main = do
-  traverse writeToConsole uiComponents
+  writeToConsole uiComponents

@@ -2,7 +2,8 @@ module Hdl (
     Hdl,
     UiItem(..),
     TitleLevel(..),
-    SubItemType(..)
+    SubItemType(..),
+    writeToConsole
     ) where
 
 
