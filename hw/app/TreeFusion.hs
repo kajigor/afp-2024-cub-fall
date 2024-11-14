@@ -15,18 +15,25 @@ data BinaryTree a = BinaryLeaf | BinaryNode a (BinaryTree a) (BinaryTree a)
 
 buildBinaryTree :: (forall b. (a -> b -> b -> b) -> b -> b) -> BinaryTree a
 buildBinaryTree g = g BinaryNode BinaryLeaf
+{-# NOINLINE buildBinaryTree #-}
+
+foldrBinaryTreeFoldrBuild :: (a -> b -> b -> b) -> b -> BinaryTree a -> b
+foldrBinaryTreeFoldrBuild _ ini BinaryLeaf = ini
+foldrBinaryTreeFoldrBuild f ini (BinaryNode v l r) = f v (foldrBinaryTreeFoldrBuild f ini l) (foldrBinaryTreeFoldrBuild f ini r)
+{-# NOINLINE foldrBinaryTreeFoldrBuild #-}
+
+{-# RULES
+  "binary tree build/foldr" forall f z (g :: forall b. (a -> b -> b -> b) -> b -> b). foldrBinaryTreeFoldrBuild f z (buildBinaryTree g) = g f z
+#-}
 
 mapBinaryTreeFoldrBuild :: (a -> b) -> BinaryTree a -> BinaryTree b
-mapBinaryTreeFoldrBuild = undefined
+mapBinaryTreeFoldrBuild f t = buildBinaryTree $ \node leaf -> foldrBinaryTreeFoldrBuild (node . f) leaf t
 
 filterBinaryTreeFoldrBuild :: (a -> Bool) -> BinaryTree a -> BinaryTree a
-filterBinaryTreeFoldrBuild = undefined
-
-foldrBinaryTreeFoldrBuild :: (b -> a -> b) -> b -> BinaryTree a -> b
-foldrBinaryTreeFoldrBuild = undefined
+filterBinaryTreeFoldrBuild p t = buildBinaryTree $ \node leaf -> foldrBinaryTreeFoldrBuild (\x -> if p x then node x else const $ const leaf) leaf t
 
 fusedBinaryTreeFoldrBuildTest :: BinaryTree Int -> Int
-fusedBinaryTreeFoldrBuildTest = undefined -- see binaryTreeTest
+fusedBinaryTreeFoldrBuildTest = foldrBinaryTreeFoldrBuild (\v l r -> testF1 (testF1 r l) v) 1 . mapBinaryTreeFoldrBuild (+1) . filterBinaryTreeFoldrBuild testF2 . mapBinaryTreeFoldrBuild sqr
 
 -- Task 2
 
