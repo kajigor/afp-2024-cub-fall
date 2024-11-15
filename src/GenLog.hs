@@ -4,7 +4,7 @@
 module GenLog where
 
 import Control.Monad
-import Data.List (unfoldr)
+import Data.List (nub, unfoldr)
 import Language.Haskell.TH
 
 genLogFuncBody :: Name -> [Name] -> Type -> Q Exp
@@ -27,7 +27,10 @@ genLogFuncDec logNm nm fT = do
   funD logNm [clause (map varP argsN) (normalB $ genLogFuncBody nm argsN fT) []]
 
 genLogFuncSign :: Name -> Type -> Dec
-genLogFuncSign nm fT = SigD nm $ makeReturnIO fT
+genLogFuncSign nm fT =
+  let preds = showPred <$> collectTVNames fT
+      ftIO = makeReturnIO fT
+   in SigD nm $ applyPreds ftIO preds
 
 genLogFunc :: Name -> Q [Dec]
 genLogFunc f = do
@@ -53,6 +56,20 @@ genValueType nm = do
 
 -- Utility functions
 
+applyPreds :: Type -> [Pred] -> Type
+applyPreds (ForallT tvs ctx t) preds = ForallT tvs (nub (ctx ++ preds)) t
+applyPreds t preds = ForallT [] (nub preds) t
+
+showPred :: Name -> Pred
+showPred n = AppT (ConT ''Show) (VarT n)
+
+collectTVNames :: Type -> [Name]
+collectTVNames (ForallT tvs _ t) = tvName <$> tvs
+  where
+    tvName (PlainTV n _) = n
+    tvName (KindedTV n _ _) = n
+collectTVNames _ = []
+
 returnsIO :: Type -> Bool
 returnsIO (ForallT _ _ t) = returnsIO t
 returnsIO (AppT (AppT ArrowT _) t) = returnsIO t
@@ -62,7 +79,10 @@ returnsIO _ = False
 makeReturnIO :: Type -> Type
 makeReturnIO (ForallT tvs ctx t) = ForallT tvs ctx $ makeReturnIO t
 makeReturnIO (AppT (AppT ArrowT a) r) = AppT (AppT ArrowT a) $ makeReturnIO r
-makeReturnIO (AppT (ConT n) t) = if n == ''IO then AppT (ConT n) t else AppT (ConT ''IO) (AppT (ConT n) t)
+makeReturnIO (AppT (ConT n) t) =
+  if n == ''IO
+    then AppT (ConT n) t
+    else AppT (ConT ''IO) (AppT (ConT n) t)
 makeReturnIO t = AppT (ConT ''IO) t
 
 arity :: Type -> Q Int
