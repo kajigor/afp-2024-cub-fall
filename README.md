@@ -1,4 +1,4 @@
-# HW01
+# HW06
 ## Soft deadline: 23:59 20.11.2024
 ## Hard deadline: 23:59 27.11.2024
 
@@ -29,22 +29,25 @@ Requirements:
 
 2. (2 points) Modify DSL to eDSL with the use of Free Monad 
 
-3. (2 points - basic, extra 4 points - advanced) Modify DSL to support different Columns and Rows. You can implement it with the help of "style" html tag and css-property flex-box. Your updated DSL should support the following desings below:
+3. (2 points - basic, extra 4 points - advanced) Modify DSL to support different Columns and Rows. 
+
+* You can implement it with the help of "style" html tag and css-property flex-box. Your updated DSL should support the following desings below:
 
 ![Example of supported designs](supported_designs.png)
 
-* Basic: refactor eDSL based on Free Monad
+* Basic (2 points): 
+    - refactor eDSL based on Free Monad
+    - provide such eDSL not to modify Free Monad to some other Monads
 
-* Advanced: modify eDSL based on Free Monad to eDSL based on ... Monad
+* Advanced (extra 4 points): 
+    - modify eDSL based on Free Monad to eDSL based on ... Monad
+    - ... could be anything, depending on your eDSL format. For example, State Monad can be used to achive such eDSL:
 
-
-... could be anything, depending on your eDSL format. For example, State Monad can be used to achive such eDSL:
-
-```
-script = do
-    startSplittingToColumns 2
-    addTitleElement "Column 1 Header"
-    addTitleElement "Column 2 Header"
-    endSplittingToColumns
-    addOrderedList 1 "Some point"
-```
+    ```
+    script = do
+        startSplittingToColumns 2
+        addTitleElement "Column 1 Header"
+        addTitleElement "Column 2 Header"
+        endSplittingToColumns
+        addOrderedList 1 "Some point"
+    ```
