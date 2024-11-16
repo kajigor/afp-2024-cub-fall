@@ -1,21 +1,12 @@
 module Main (main) where
 
-import Hdl (Hdl, 
-    addTitleLineElement,
-    addTextLineElement,
-    addOrderedItem,
-    addUnorderedItem,
-    addImageUrl,
-    writeToConsole
-    )
+import FL (UiItem)
 
-uiComponents = do
-  addTitleLineElement "small" "Main Title"
-  addTextLineElement "Simple text"
-  addOrderedItem 1 "Carrot"
-  addOrderedItem 2 "Apple"
+-- eDSL --
+uiComponent = 
 
 
+-- for example, render is the name of your interpreter --
 main :: IO ()
 main = do
-  writeToConsole uiComponents
+  render uiComponent
