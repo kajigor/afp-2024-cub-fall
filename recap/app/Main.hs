@@ -1,9 +1,9 @@
 module Main (main) where
 
-import FL (UiItem)
+import FL (UiItem, render)
 
 -- eDSL --
-uiComponent = 
+uiComponent = undefined
 
 
 -- for example, render is the name of your interpreter --
