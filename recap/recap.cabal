@@ -25,7 +25,7 @@ source-repository head
 
 library
   exposed-modules:
-      Hdl
+      FL
   other-modules:
       Paths_recap
   autogen-modules:
