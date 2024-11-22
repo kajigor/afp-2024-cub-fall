@@ -25,6 +25,7 @@ source-repository head
 library
   exposed-modules:
       FL
+      SmartConstructors
   other-modules:
       Paths_recap
   autogen-modules:
