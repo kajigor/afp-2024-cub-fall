@@ -1,7 +1,6 @@
 module Main (main) where
 
-import FL (UiItem, render)
-
+import FL 
 -- eDSL --
 uiComponent = undefined
 
