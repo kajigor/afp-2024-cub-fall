@@ -26,12 +26,12 @@ uiComponent = do
 
 flexUiComponent :: Html
 flexUiComponent = do
-  h3 "Rows"
+  h3 "Columns"
   columns $ do
     p "Column 1"
     p "Column 2"
     p "Column 3"
-  h3 "Columns"
+  h3 "Rows"
   rows $ do
     columns $ do
       p "Column 1"
