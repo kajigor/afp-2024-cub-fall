@@ -25,6 +25,7 @@ source-repository head
 library
   exposed-modules:
       FL
+      Interpreters
       SmartConstructors
   other-modules:
       Paths_recap

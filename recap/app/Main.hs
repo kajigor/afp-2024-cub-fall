@@ -1,17 +1,28 @@
 module Main (main) where
 
-import FL 
+import FL
+import Interpreters
 import SmartConstructors
 
 -- eDSL --
 uiComponent :: Html ()
 uiComponent = do
-    title H1 "The story about little test"
-    ul $ do
-        li "The test was able to test unordered list"
-        li "And not even with one element"
-    p "Moreover, it could even check if paraphs are supported"
-    title H3 "The End"
+  h1 "The story about little test"
+  ul $ do
+    li "The test was able to test unordered lists"
+    li "And not even with one element"
+  ol $ do
+    li "Ordered lists were no exception"
+    li "And also with several elements"
+  p "Moreover, it could even check if paraphs are rendered correctly"
+  h2 "But the test was mostly proud of its capability to test forms"
+  form "/delete/all" $ do
+    input "text" "John"
+    input "text" "Doe"
+    button "Submit"
+  h3 "Letztlich konnte ein Test auch die Bildern ziehen."
+  img "./resources/pretty_picture.png"
+  p "The End"
 
 -- for example, render is the name of your interpreter --
 main :: IO ()
