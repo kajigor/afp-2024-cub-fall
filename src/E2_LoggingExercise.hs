@@ -25,7 +25,7 @@ generateLoggingFunctionBody name args =
 generateLoggingFunctionDec :: Name -> Q Dec
 generateLoggingFunctionDec fnName = do
     tp <- reifyType fnName
-    (args, _) <- splitFunc tp
+    (typeVars, args, _) <- splitFunc tp
     argsNames <- replicateM (length args) (newName "arg")
     funD (generateLoggingFunctionName fnName) [clause (map varP argsNames) (normalB $ generateLoggingFunctionBody fnName argsNames) []]
 
@@ -35,9 +35,14 @@ generateLoggingFunctionUntyped name = return <$> generateLoggingFunctionDec name
 generateLoggingFunctionSig :: Name -> Q Dec
 generateLoggingFunctionSig fnName = do
     tp <- reifyType fnName
-    (args, fn) <- splitFunc tp
-    sigD (generateLoggingFunctionName fnName) $ foldr ((\a b -> [t| $a -> $b |]) . return) [t| ($(return fn), String) |] args
+    (typeVars, args, fn) <- splitFunc tp
+    let logType = foldr ((\a b -> [t| $a -> $b |]) . return) [t| ($(return fn), String) |] args
+    let showCtx = map applyShowConst typeVars
+    sigD (generateLoggingFunctionName fnName) $ ForallT typeVars showCtx <$> logType
 
+applyShowConst :: TyVarBndr flag -> Type
+applyShowConst (PlainTV n _) = AppT (ConT ''Show) (VarT n)
+applyShowConst (KindedTV n _ _) = AppT (ConT ''Show) (VarT n)
 
 generateLoggingFunction :: Name -> Q [Dec]
 generateLoggingFunction name = sequence [generateLoggingFunctionSig name, generateLoggingFunctionDec name]
@@ -45,8 +50,14 @@ generateLoggingFunction name = sequence [generateLoggingFunctionSig name, genera
 generateLoggingFunctions :: [Name] -> DecsQ
 generateLoggingFunctions names = concat <$> mapM generateLoggingFunction names
 
-splitFunc :: Type -> Q ([Type], Type)
-splitFunc t = return $ go t []
+splitFunc :: Type -> Q ([TyVarBndr Specificity], [Type], Type)
+splitFunc t = case t of
+    ForallT vars _ rest -> do
+        let (args, res) = go rest []
+        return (vars, args, res)
+    _ -> do
+        let (args, res) = go t []
+        return ([], args, res)
   where
     go (AppT (AppT ArrowT arg) rest) args = go rest (args ++ [arg])
     go resultType args = (args, resultType)

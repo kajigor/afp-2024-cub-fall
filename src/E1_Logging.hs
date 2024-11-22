@@ -1,3 +1,4 @@
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module E1_LoggingExercise where
@@ -18,4 +19,7 @@ test3 a b = case b of
     Just b -> a + b 
     Nothing -> a 
 
-$(generateLoggingFunctions ['test1, 'test2, 'test3])
+test4 :: a -> [a]
+test4 = replicate 42
+
+$(generateLoggingFunctions ['test1, 'test2, 'test3, 'test4])
