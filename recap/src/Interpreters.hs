@@ -17,13 +17,13 @@ showH x s = case x of
 tag :: String -> Writer String () -> Writer String ()
 tag name = tagWithAttrs name []
 
-tagWithAttrs :: String -> [(String, String)] -> Writer String () -> Writer String ()
+tagWithAttrs :: String -> Attrs -> Writer String () -> Writer String ()
 tagWithAttrs name attrs body = tell (printf "<%s%s>" name (showAttrs attrs)) >> body >> tell (printf "</%s>" name)
   where
-    showAttrs :: [(String, String)] -> String
+    showAttrs :: Attrs -> String
     showAttrs = concatMap (\(attrName, attrValue) -> " " ++ attrName ++ "=" ++ show attrValue)
 
-interpret :: Html a -> Writer String a
+interpret :: HtmlM a -> Writer String a
 interpret = foldFree go
   where
     go :: HtmlF x -> Writer String x
@@ -36,10 +36,11 @@ interpret = foldFree go
       (Form action body a) -> tagWithAttrs "form" [("action", action), ("method", "post")] (interpret body) >> pure a
       (Input t value a) -> tagWithAttrs "input" [("type", t), ("value", value)] (tell "") >> pure a
       (Image src a) -> tagWithAttrs "img" [("src", src)] (tell "") >> pure a
+      (Div attrs body a) -> tagWithAttrs "div" attrs (interpret body) >> pure a
 
 writeToConsole :: Writer String a -> IO ()
 writeToConsole w = putStrLn $ snd $ runWriter w
 
 -- implement interpreters --
-render :: Html a -> IO ()
+render :: HtmlM a -> IO ()
 render x = writeToConsole (interpret x)

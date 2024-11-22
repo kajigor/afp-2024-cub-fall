@@ -5,7 +5,7 @@ import Interpreters
 import SmartConstructors
 
 -- eDSL --
-uiComponent :: Html ()
+uiComponent :: Html
 uiComponent = do
   h1 "The story about little test"
   ul $ do
@@ -24,7 +24,24 @@ uiComponent = do
   img "./resources/pretty_picture.png"
   p "The End"
 
+flexUiComponent :: Html
+flexUiComponent = do
+  h3 "Rows"
+  columns $ do
+    p "Column 1"
+    p "Column 2"
+    p "Column 3"
+  h3 "Columns"
+  rows $ do
+    columns $ do
+      p "Column 1"
+      p "Column 2"
+    p "Row 2"
+    p "Row 3"
+
 -- for example, render is the name of your interpreter --
 main :: IO ()
 main = do
   render uiComponent
+  putStrLn ""
+  render flexUiComponent
