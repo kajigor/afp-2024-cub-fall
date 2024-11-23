@@ -11,10 +11,8 @@ generateLoggingFunctionName originalName = mkName $ nameBase originalName ++ "Lo
 
 generateLoggingFunctionSig :: Name -> Q Dec
 generateLoggingFunctionSig originalName = do
-    (argsTypes, retType) <- split <$> reifyType originalName
-    sigD (generateLoggingFunctionName originalName) $ func (return <$> argsTypes) [t| (String, $(return retType)) |]
-    where
-        func xs y = foldr (\a b -> [t| $a -> $b |]) y xs
+    t <- reifyType originalName
+    sigD (generateLoggingFunctionName originalName) $ changeRetType t (\retType -> [t| (String, $retType) |])
 
 generateLoggingFunctionBody :: Name -> [Name] -> Q Exp
 generateLoggingFunctionBody original args = do
@@ -28,8 +26,7 @@ generateLoggingFunctionBody original args = do
 
 generateLoggingFunctionDec :: Name -> Q Dec
 generateLoggingFunctionDec origName = do
-  (origArgsNames, _) <- split <$> reifyType origName
-  let n = length origArgsNames
+  n <- arity <$> reifyType origName
   argsNames <- replicateM n (newName "x")
   funD
     (generateLoggingFunctionName origName)
@@ -44,6 +41,16 @@ generateLoggingFunction name = sequence [generateLoggingFunctionSig name, genera
 generateLoggingFunctions :: [Name] -> Q [Dec]
 generateLoggingFunctions names = concat <$> mapM generateLoggingFunction names
 
-split :: Type -> ([Type], Type)
-split (AppT (AppT ArrowT arg) xs) = first (arg :) $ split xs
-split x = ([], x)
+changeRetType :: Type -> (Q Type -> Q Type) -> Q Type
+changeRetType t f = case t of
+    (AppT (AppT ArrowT arg) xs) -> AppT (AppT ArrowT arg) <$> changeRetType xs f
+    (ForallVisT ys xs) -> ForallVisT ys <$> changeRetType xs f
+    (ForallT ys ctx xs) -> ForallT ys ctx <$> changeRetType xs f
+    x -> f $ return x
+
+arity :: Type -> Int
+arity t = case t of
+    (AppT (AppT ArrowT arg) xs) -> 1 + arity xs
+    (ForallVisT ys xs) -> arity xs
+    (ForallT ys ctx xs) -> arity xs
+    _ -> 0

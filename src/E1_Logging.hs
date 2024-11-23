@@ -1,7 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module E1_LoggingExercise where
+{-# LANGUAGE KindSignatures #-}
+module E1_Logging where
 
 import Language.Haskell.TH
 import E2_LoggingExercise
@@ -17,11 +18,14 @@ test2 a b = case readMaybe b of
     Nothing -> Nothing
     Just x -> Just $ a + x 
 
+test3 :: Show a => a -> [a]
+test3 = replicate 6 
 
-$(generateLoggingFunctions ['test1, 'test2])
+$(generateLoggingFunctions ['test1, 'test2, 'test3])
 
 logs :: String
 logs = fst $ do
     _ <- test1Logged 1 2
     _ <- test2Logged 1 "3"
+    _ <- test3Logged "element"
     return ()
