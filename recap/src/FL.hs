@@ -14,6 +14,8 @@ module FL
     input,
     button,
     form,
+    columns,
+    rows,
     renderHTML,
   )
 where
@@ -21,7 +23,6 @@ where
 -- Free Monad for the 2nd task --
 import Control.Monad.Free
 import Control.Monad.Writer
-import Text.Printf (printf)
 
 -- describe your DSL here --
 data UiItem a
@@ -34,6 +35,8 @@ data UiItem a
   | Input String a
   | Button String a
   | Form String UiComponent a
+  | Columns UiComponent a
+  | Rows UiComponent a
 
 data Order = Ordered | Unordered
 
@@ -59,6 +62,8 @@ instance Functor UiItem where
   fmap f (Input s a) = Input s (f a)
   fmap f (Button s a) = Button s (f a)
   fmap f (Form s c a) = Form s c (f a)
+  fmap f (Columns c a) = Columns c (f a)
+  fmap f (Rows c a) = Rows c (f a)
 
 type UiComponent = Free UiItem ()
 
@@ -98,25 +103,37 @@ button s = liftF $ Button s ()
 form :: String -> UiComponent -> UiComponent
 form s c = liftF $ Form s c ()
 
+columns :: UiComponent -> UiComponent
+columns c = liftF $ Columns c ()
+
+rows :: UiComponent -> UiComponent
+rows c = liftF $ Rows c ()
+
 -- implement interpreters --
 renderHTML :: UiComponent -> String
-renderHTML comp = snd $ runWriter $ toWriter comp
+renderHTML comp = execWriter $ toWriter comp
   where
     toWriter :: UiComponent -> Writer String ()
     toWriter = foldFree transform
 
     transform :: UiItem a -> Writer String a
     transform (Plain s next) = tell s >> return next
-    transform (Title ts s next) = let tss = titleSize ts 
-                                  in tell (printf "<%s>%s</%s>\n" tss s tss) >> return next
-    transform (Paragraph s next) = tell ("<p>" ++ s ++ "</p>\n") >> return next
-    transform (Image (Path p) s next) = tell ("<img src=\"" ++ p ++ "\" alt=\"" ++ s ++ "\">\n") >> return next
-    transform (Link (URL u) s next) = tell ("<a href=\"" ++ u ++ "\">" ++ s ++ "</a>\n") >> return next
-    transform (List Ordered s next) = tell "<ol>\n" >> listItems s >> tell "</ol>\n" >> return next
-    transform (List Unordered s next) = tell "<ul>\n" >> listItems s >> tell "</ul>\n" >> return next
-    transform (Input s next) = tell ("<input type=\"text\" value=\"" ++ s ++ "\"></input>\n") >> return next
-    transform (Button s next) = tell ("<button type=\"submit\">" ++ s ++ "</button>\n") >> return next
-    transform (Form s c next) = tell ("<form action=\"" ++ s ++ "\">\n") >> toWriter c >> tell "</form>\n" >> return next
+    transform (Title ts s next) = tag (titleSize ts) [] (tell s) >> return next
+    transform (Paragraph s next) = tag "p" [] (tell s) >> return next
+    transform (Image (Path p) s next) = tag "img" [("src", p), ("alt", s)] (return ()) >> return next
+    transform (Link (URL u) s next) = tag "a" [("href", u)] (tell s) >> return next
+    transform (List Ordered s next) = tag "ol" [] (listItems s) >> return next
+    transform (List Unordered s next) = tag "ul" [] (listItems s) >> return next
+    transform (Input s next) = tag "input" [("type", "text"), ("value", s)] (return ()) >> return next
+    transform (Button s next) = tag "button" [("type", "submit")] (tell s) >> return next
+    transform (Form s c next) = tag "form" [("action", s)] (toWriter c) >> return next
+    transform (Columns c next) = tag "div" [("style", "display: flex;")] (flexItems c) >> return next
+    transform (Rows c next) = tag "div" [("style", "display: flex; flex-direction: column;")] (flexItems c) >> return next
+
+    tag :: String -> [(String, String)] -> Writer String a -> Writer String a
+    tag t as w =
+      let attrs = concatMap (\(k, v) -> " " ++ k ++ "=\"" ++ v ++ "\"") as
+       in tell ("<" ++ t ++ attrs ++ ">") >> w <* tell ("</" ++ t ++ ">\n")
 
     titleSize :: TitleSize -> String
     titleSize H1 = "h1"
@@ -124,4 +141,7 @@ renderHTML comp = snd $ runWriter $ toWriter comp
     titleSize H3 = "h3"
 
     listItems :: UiComponent -> Writer String ()
-    listItems = foldFree $ \c -> tell "<li>" >> transform c <* tell "</li>\n" 
+    listItems = foldFree $ tag "li" [] . transform
+
+    flexItems :: UiComponent -> Writer String ()
+    flexItems = foldFree $ tag "div" [("style", "flex: 1;")] . transform

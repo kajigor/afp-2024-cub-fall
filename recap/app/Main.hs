@@ -3,8 +3,8 @@ module Main (main) where
 import FL
 
 -- eDSL --
-uiComponent :: UiComponent
-uiComponent = do
+simpleComponent :: UiComponent
+simpleComponent = do
   title1 "Hello, World!"
   paragraph "This is a simple example of a Free Monad."
   image (path "path/to/image") "Image description"
@@ -24,6 +24,24 @@ uiComponent = do
     input "Text2"
     button "Submit2"
 
+columnsComponent :: UiComponent
+columnsComponent = do
+  columns $ do
+    paragraph "This is the first column."
+    rows $ do
+      paragraph "This is the first row."
+      paragraph "This is the second row."
+    paragraph "This is the third column."
+
+rowsComponent :: UiComponent
+rowsComponent = do
+  rows $ do
+    paragraph "This is the first row."
+    columns $ do
+      paragraph "This is the first column."
+      paragraph "This is the second column."
+    paragraph "This is the third row."
+
 -- for example, render is the name of your interpreter --
 main :: IO ()
-main = putStrLn $ renderHTML uiComponent
+main = putStrLn $ renderHTML rowsComponent
