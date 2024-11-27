@@ -22,7 +22,8 @@ data UiItemF a = Title String a       -- <h1>HTML Elements Reference</h1>
                 | InputForm String a -- <input type="text" value="..."> 
                 | PostForm String (UiItemMonad a) a -- <form action="/submit-form" method="POST"> 
                 | Button String a --  <button type="submit">Submit</button>
-                deriving (Functor)
+                | DivStyle String (UiItemMonad a) a -- <div style="display: flex; flex-direction: column;">
+                deriving (Functor)        
 
 title :: String -> UiItem
 title str = Free $ Pure <$> Title str ()
@@ -57,24 +58,42 @@ input txt = Free $ Pure <$> InputForm txt ()
 button :: String -> UiItem
 button url = Free $ Pure <$> Button url ()
 
+row :: UiItem -> UiItem
+row body = Free $ Pure <$> DivStyle "row" body ()
+
+column :: UiItem -> UiItem
+column body = Free $ Pure <$> DivStyle "column" body ()
+
 -- implement interpreters --
 render ::  UiItemMonad () -> IO ()
 render = foldFree renderUitem
 
 renderUitem :: UiItemF a -> IO a
-renderUitem (Title str a) = printf "<h1>" >> printf str >> printf "</h1>\n" >> return a
-renderUitem (Paragraph str a) = printf "<p>" >> printf str >> printf "</p>\n" >> return a
-renderUitem (Images str a) = printf "<img src=" >> printf str >> printf ">\n" >> return a
-renderUitem (Link l txt a) = printf "<a href=" >> printf l >> printf " target=\"_blank\">" >> printf txt >> printf "</a>\n" >> return a
+renderUitem (Title str a) = addTagOnly "h1" (printf str) >> return a
+renderUitem (Paragraph str a) = addTagOnly "p" (printf str) >> return a
+renderUitem (Link l txt a) = addTag "a" (genTokens ["href", "target"] [l, "_blank"]) (printf txt) >> return a
 renderUitem (Text str a) = printf str >> return a
-renderUitem (LiTag m a) = printf "<li>" >> foldFree renderUitem m >> printf "</li>\n" >> return a
-renderUitem (OrderedList lst a) = printf "<ol>" >> foldFree renderUitem lst >> printf "</ol>\n" >> return a
-renderUitem (UnOrderedList lst a) = printf "<ul>" >> foldFree renderUitem lst >> printf "</ul>\n" >> return a
+renderUitem (LiTag m a) = addTagOnly "li" (foldFree renderUitem m) >> return a
+renderUitem (OrderedList lst a) = addTagOnly "ol" (foldFree renderUitem lst) >> return a
+renderUitem (UnOrderedList lst a) = addTagOnly "ul" (foldFree renderUitem lst) >> return a
+renderUitem (PostForm url body a) = addTag "form" (genTokens ["action", "method"] [url, "POST"]) (foldFree renderUitem body) >> return a
+renderUitem (Images str a) = printf "<img src=" >> printf str >> printf ">" >> return a
 renderUitem (InputForm txt a) = printf "<input type=\"text\" value=" >> printf txt >> printf ">\n" >> return a
-renderUitem (PostForm url body a) = printf "<form action="
-                                    >> printf url
-                                    >> printf " method=\"POST\">\n" 
-                                    >> foldFree renderUitem body
-                                    >> printf "</form>\n" >> return a
-renderUitem (Button cur_title a) = printf "<button type=\"submit\">" >> printf cur_title >> printf "</button>\n" >> return a
+renderUitem (Button cur_title a) = addTag "button" (genTokens ["type"] ["submit"]) (printf cur_title) >> return a
+renderUitem (DivStyle rctype body a) = addTag "div" (genTokens ["style"] [curstyle]) (foldFree renderUitem body) >> return a
+    where curstyle :: String
+          curstyle = "display: flex; flex-direction:" ++ rctype
+
+addTagOnly :: String -> IO a -> IO a
+addTagOnly tag = addTag tag ""
+
+addTag :: String -> String -> IO a -> IO a
+addTag tag tokens mon = do
+    printf ("<" ++ tag ++ tokens ++ ">")
+    result <- mon
+    printf ("</" ++ tag ++ ">")
+    return result
+
+genTokens :: [String] -> [String] -> String
+genTokens labels values = unwords $ zipWith (\l v -> " " ++ l ++ "=\"" ++ v ++ "\"") labels values
 
