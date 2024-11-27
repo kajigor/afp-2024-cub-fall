@@ -25,7 +25,9 @@ source-repository head
 
 library
   exposed-modules:
-      Hdl
+      FL
+      Render
+      SmartConstructors
   other-modules:
       Paths_recap
   autogen-modules:
