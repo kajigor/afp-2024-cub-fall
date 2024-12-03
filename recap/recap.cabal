@@ -24,14 +24,11 @@ source-repository head
 
 library
   exposed-modules:
-      Cont_clean
-      Coroutines
-      Coroutines_type
-      CPS
-      Cps
-      CPS2
-      Cps2
-      CPS_clean
+      Coroutine
+      CustomCont
+      Exception
+      PythCont
+      PythCps
   other-modules:
       Paths_recap
   autogen-modules:
