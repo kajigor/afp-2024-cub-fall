@@ -27,6 +27,7 @@ library
       Coroutine
       CustomCont
       Exception
+      Parser
       PythCont
       PythCps
   other-modules:
@@ -38,8 +39,10 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Werror=incomplete-patterns
   build-depends:
       base >=4.7 && <5
+    , hashable >=1.4.4.0 && <1.5
     , mtl
     , transformers
+    , unordered-containers >=0.2.20 && <0.3
   default-language: Haskell2010
 
 executable recap-exe
@@ -53,9 +56,11 @@ executable recap-exe
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Werror=incomplete-patterns -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , hashable >=1.4.4.0 && <1.5
     , mtl
     , recap
     , transformers
+    , unordered-containers >=0.2.20 && <0.3
   default-language: Haskell2010
 
 test-suite recap-test
@@ -70,7 +75,9 @@ test-suite recap-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Werror=incomplete-patterns -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , hashable >=1.4.4.0 && <1.5
     , mtl
     , recap
     , transformers
+    , unordered-containers >=0.2.20 && <0.3
   default-language: Haskell2010

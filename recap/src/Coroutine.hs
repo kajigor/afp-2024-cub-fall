@@ -27,7 +27,7 @@ dequeue :: (Monad m) => CoroutineT r m r
 dequeue = do
   current_ccs <- getCCs
   case current_ccs of
-    [] -> return undefined
+    [] -> error "Queue is empty"
     (p : ps) -> do
       putCCs ps
       p
