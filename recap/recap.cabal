@@ -23,6 +23,15 @@ source-repository head
   location: https://github.com/githubuser/recap
 
 library
+  exposed-modules:
+      Cont_clean
+      Coroutines
+      Coroutines_type
+      CPS
+      Cps
+      CPS2
+      Cps2
+      CPS_clean
   other-modules:
       Paths_recap
   autogen-modules:
