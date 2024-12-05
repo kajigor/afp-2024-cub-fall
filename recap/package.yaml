@@ -7,7 +7,6 @@ maintainer:          "example@example.com"
 copyright:           "2024 Author name here"
 
 extra-source-files:
-- README.md
 - CHANGELOG.md
 
 # Metadata used when publishing your package
@@ -23,7 +22,8 @@ dependencies:
 - base >= 4.7 && < 5
 - transformers
 - mtl
-- containers
+- unordered-containers ^>=0.2.20
+- hashable ^>=1.4.4.0
 
 ghc-options:
 - -Wall
