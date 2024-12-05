@@ -1,30 +1,21 @@
 module PythCont () where
 
-import Control.Monad.Trans.Cont (Cont, runCont, shift)
+-- Use this monad
+import Control.Monad.Trans.Cont (Cont)
 
-addCont :: Int -> Int -> Cont r Int
-addCont x y = return (x + y)
+-- Rewrite this functions in CPS using Cont monad
 
-squareCont :: Int -> Cont r Int
-squareCont x = return (x * x)
+-- addCps :: Int -> Int -> ((Int -> r) -> r)
+-- addCps x y = \k -> k (x + y)
 
-pythagorasCont :: Int -> Int -> Cont r Int
-pythagorasCont x y = do
-  x_squared <- squareCont x
-  y_squared <- squareCont y
-  addCont x_squared y_squared
+-- squareCps :: Int -> ((Int -> r) -> r)
+-- squareCps x = \k -> k (x * x)
 
-divCont :: Int -> Int -> Cont String Int
-divCont x 0 = shift (\k -> return "Division by zero")
-divCont x y = return (x `div` y)
+-- pythagorasCps :: Int -> Int -> ((Int -> r) -> r)
+-- pythagorasCps x y = \k ->
+--   squareCps x $ \x_squared ->
+--     squareCps y $ \y_squared ->
+--       addCps x_squared y_squared $ k
 
--- x^2 / c + y^2
-pythagorasCont' :: Int -> Int -> Int -> Cont String Int
-pythagorasCont' x y c = do
-  x_squared <- squareCont x
-  x_squared_divided <- divCont x_squared c
-  y_squared <- squareCont y
-  addCont x_squared_divided y_squared
-
-run :: Cont r r -> r
-run m = runCont m id
+-- run :: ((r -> r) -> r) -> r
+-- run f = f id
