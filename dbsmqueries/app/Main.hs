@@ -20,6 +20,7 @@ data QueryF a where
     WhereTrue :: a -> QueryF a
     OrderBy :: [String] -> a -> QueryF a  -- ORDER BY order_time, order_id
     Limit :: Int -> a -> QueryF a  -- Limit 10
+    DropTable :: String -> a -> QueryF a -- DROP TABLE Customers;
     deriving (Functor)
 
 data Operation = Equal | GreaterThan | LessThan | GreaterThanOrEqual | LessThanOrEqual | NotEqual
@@ -31,7 +32,6 @@ instance Show Operation where
     show LessThan  = "<"
     show GreaterThanOrEqual = ">="
     show LessThanOrEqual = "<="
-
 
 select :: String -> [String] -> Query -> Query
 select table columns body = Free $ Pure <$> Select table columns body ()
@@ -55,7 +55,10 @@ orderBy :: [String] -> Query
 orderBy columns = Free $ Pure <$> OrderBy columns ()
 
 limit :: Int -> Query
-limit lim =  Free $ Pure <$> Limit lim ()
+limit lim = Free $ Pure <$> Limit lim ()
+
+dropTable :: String -> Query
+dropTable tableName = Free $ Pure <$> DropTable tableName ()
 
 render' ::  QueryMonad () -> IO ()
 render' = foldFree renderQuery'
@@ -66,7 +69,7 @@ quoteColumns columns = intercalate ", " (map (\col -> "\"" ++ col ++ "\"") colum
 
 renderQuery' :: QueryF a -> IO a
 renderQuery' (Select table columns body next) = do
-    printf "\nSELECT \"%s\" FROM %s" (quoteColumns columns) table
+    printf "\nSELECT %s FROM \"%s\"" (quoteColumns columns) table
     _ <- foldFree renderQuery' body
     printf ";"
     return next
@@ -98,7 +101,7 @@ renderQuery' (OrderBy columns next) = do
 renderQuery' (Limit lim next) = do
     printf "\nLIMIT %d" lim
     return next
-
+renderQuery' (DropTable tableName next) = printf "\nDROP TABLE %s;" tableName >> return next
 
 queryComponent :: Query
 queryComponent = do
@@ -110,6 +113,7 @@ queryComponent = do
         whereTrue
         orderBy ["col1", "col2"]
         limit 100
+    dropTable "Customers"
 
 main :: IO ()
 main = do render' queryComponent
