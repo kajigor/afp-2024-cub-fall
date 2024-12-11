@@ -25,7 +25,9 @@ source-repository head
 
 library
   exposed-modules:
+      Interpreter
       Lib
+      Parser
   other-modules:
       Paths_exam
   autogen-modules:
@@ -35,6 +37,9 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , containers
+    , mtl
+    , transformers
   default-language: Haskell2010
 
 executable exam-exe
@@ -48,7 +53,10 @@ executable exam-exe
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , exam
+    , mtl
+    , transformers
   default-language: Haskell2010
 
 test-suite exam-test
@@ -63,5 +71,8 @@ test-suite exam-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , exam
+    , mtl
+    , transformers
   default-language: Haskell2010
