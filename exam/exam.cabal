@@ -27,7 +27,6 @@ library
   exposed-modules:
       ExprParser
       Interpreter
-      Lib
       Parser
   other-modules:
       Paths_exam
