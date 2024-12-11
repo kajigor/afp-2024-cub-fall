@@ -33,7 +33,7 @@ evalUnaryOp Tan a = tan a
 
 data Expr a where
   Var :: String -> Expr Float
-  Const :: Float -> Expr Float
+  Val :: Float -> Expr Float
   UnOp :: UnaryOp -> Expr Float -> Expr Float
   BinOp :: BinaryOp -> Expr Float -> Expr Float -> Expr Float
   Seq :: Expr () -> Expr a -> Expr a
@@ -53,7 +53,7 @@ evalExpr (Var s) = do
   case M.lookup s varMap of
     Just x -> return (VFloat x)
     Nothing -> lift $ throwE $ UndefinedVar s
-evalExpr (Const x) = return (VFloat x)
+evalExpr (Val x) = return (VFloat x)
 evalExpr (UnOp op e1) = do
     x <- evalExpr e1
     case x of
@@ -76,10 +76,10 @@ evalExpr (Let var e) = do
         _ -> lift $ throwE TypeError
 
 example :: Expr Float
-example = Seq (Let "a" (BinOp Add (Const 1.4) (UnOp Sin (Const 3.4)))) (BinOp Div (Var "a") (Const 3.5))
+example = Seq (Let "a" (BinOp Add (Val 1.4) (UnOp Sin (Val 3.4)))) (BinOp Div (Var "a") (Val 3.5))
 
 example2 :: Expr Float
-example2 = Seq (Let "a" (BinOp Add (Const 2.4) (UnOp Sin (Const 3.4)))) (BinOp Div (Var "a") (Const 3.5))
+example2 = Seq (Let "a" (BinOp Add (Val 2.4) (UnOp Sin (Val 3.4)))) (BinOp Div (Var "a") (Val 3.5))
 
 runExpr :: Expr a -> Either Error ReturnValue
 runExpr expr = runIdentity $ runExceptT $ evalStateT (evalExpr expr) M.empty
