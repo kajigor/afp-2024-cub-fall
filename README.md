@@ -22,4 +22,6 @@ You can get up to 50 points which convert into 50% of your final grade.
 * Imagine, you have a fleet of fitness trackers which may operate in different units of measure. Collect statistics from them. 
 * Implement a scientific calculator which supports not only basic arithmetic operations, but also some trigonometry and has a memory cell. 
 
+I have chosen task 'Implement a scientific calculator which supports not only basic arithmetic operations, but also some trigonometry and has a memory cell.'.
 
+I used Monad Transformers, GADT and DSL.
