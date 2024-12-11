@@ -56,6 +56,18 @@ instance MemSYM (EvalM ()) where
     m <- gets snd
     push m
 
+instance CmdSYM String where
+  binOpCmd Plus = "+"
+  binOpCmd Minus = "-"
+  binOpCmd Mul = "*"
+  binOpCmd Div = "/"
+  unOpCmd Sin = "sin"
+  unOpCmd Cos = "cos"
+  pushCmd = show
+
+instance MemSYM String where
+  saveCmd = "save"
+  getCmd = "get"
 
 type Stack = [Float]
 
@@ -81,7 +93,7 @@ singletonStack = do
 
 readSafe str = maybe (throwError "Parsing error") return (readMaybe str)
 
-parse :: String -> Except String [EvalM ()]
+parse :: (CmdSYM t, MemSYM t) => String -> Except String [t]
 parse expr = mapM go (words expr)
   where
     go "+" = return $ binOpCmd Plus
@@ -99,13 +111,18 @@ parse expr = mapM go (words expr)
 exec :: [EvalM ()] -> Except String Float
 exec cmds = evalStateT (sequence_ cmds >> singletonStack >> pop) ([], 0)
 
+view :: [String] -> String
+view = unwords
+
 main :: IO ()
 main = do
   line <- getLine
   case runExcept $ parse line of
-    Right cmds -> case runExcept $ exec cmds of
-      Right res -> print res
-      Left err -> putStrLn $ "Error: " ++ err
+    Right cmds -> do
+      case runExcept $ exec cmds of
+        Right res -> print res
+        Left err -> putStrLn $ "Error: " ++ err
+      -- putStrLn $ view cmds
     Left err -> putStrLn $ "Error: " ++ err
 
 -- save - save top of stack to memory cell
