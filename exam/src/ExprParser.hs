@@ -49,7 +49,7 @@ varDefinition = do
     Let name <$> expr
 
 stmts :: Parser (Expr Float)
-stmts = Seq <$> ((varDefinition <* tok (char ';')) `chainl1` return Seq) <*> expr
+stmts = Seq <$> ((varDefinition <* tok (char ';')) `chainl1` return Seq) <*> expr <|> expr
 
 parseExpression :: String -> Maybe (Expr Float)
 parseExpression input = case runParser (stmts <* eof) input of
