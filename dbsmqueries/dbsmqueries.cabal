@@ -69,7 +69,8 @@ executable dbsmqueries
     -- Other library packages from which modules are imported.
     build-depends:    base ^>=4.17.2.1,
                       free >=5.1.3,
-                      mtl >=2.2.2
+                      mtl >=2.2.2,
+                      hspec
 
     -- Directories containing source files.
     hs-source-dirs:   app
