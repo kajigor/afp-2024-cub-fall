@@ -32,22 +32,18 @@ data Matrix a = Mat { mRow :: Int, mCol :: Int, rows :: Vector ( Vector a ) } de
 ind :: Matrix a -> Int -> Int -> a
 ind (Mat _ _ xs) i j = (xs !!! i) !!! j
 
--- {-@ col :: m:NEMatrix a -> {i:Nat | mCol m > i} -> v:VectorN a (mCol m) @-}
--- col :: Matrix a -> Int -> Vector a
--- col m@(Mat _ c _) ix = Vec c $ go m 0 ix
---     where
---         {-@ go :: m:NEMatrix a -> {rowx:Nat | mRow m >= rowx} -> {colx : Nat | mCol m > colx } -> [a] @-}
---         go :: Matrix a -> Int -> Int -> [a]
---         go m rowx colx = if (rowx >= mRow m) then [] else ind m rowx colx : go m (rowx + 1) colx
+{-@ for :: v:Vector a -> (a -> b) -> {v1:Vector b | mLen v1 == mLen v} @-}
+for :: Vector a -> (a -> b) -> Vector b
+for (Vec n xs) f = Vec n (map f xs)
 
-
-impossible = undefined
+{-@ impossible :: {v:String | false} -> a @-}
+impossible msg = error msg
 
 {-@ vmul :: v1:Vector Int -> {v2:Vector Int | mLen v1 == mLen v2} -> Int @-}
 vmul :: Vector Int -> Vector Int -> Int
 vmul (Vec 0 _) (Vec 0 _) = 0
-vmul (Vec _ []) _ = impossible
-vmul _ (Vec _ []) = impossible
+vmul (Vec _ []) _ = impossible "vectors of different length"
+vmul _ (Vec _ []) = impossible "vectors of different length"
 vmul (Vec n (x : xs)) ( Vec m (y : ys)) = x * y + (Vec (n-1) xs `vmul` Vec (m-1) ys)
 
 {-@ vplus :: v1:Vector Int -> {v2:Vector Int | mLen v1 == mLen v2} -> {v3:Vector Int | mLen v3 == mLen v1}@-}
@@ -57,20 +53,25 @@ vplus (Vec n v1) (Vec m v2) = Vec n $ go v1 v2
       go :: [Int] -> [Int] -> [Int]
       go (x:xs) (y:ys) = x + y : go xs ys
       go [] [] = []
-      go [] _ = impossible
-      go _ [] = impossible
+      go [] _ = impossible "vectors of different length"
+      go _ [] = impossible "vectors of different length"
 
--- (***) :: Matrix Int -> Matrix Int -> Matrix Int
--- (***) (Mat _ _ (Vec _ rows)) m2 = Mat h w2 $ Vec h $ go rows m2
---   where
---       go :: [Vector Int] -> Matrix Int -> [Vector Int]
---       go (x:xs) m@(Mat r c ms) = Vec r (rowxcol x 0 m) : go xs m
---       go [] _ = []
+{-@ (***) :: x:Matrix Int -> {y:Matrix Int | mCol x == mRow y} -> MatrixN Int (mRow x) (mCol y) @-}
+(***) :: Matrix Int -> Matrix Int -> Matrix Int
+(***) (Mat rws _ xs) m@(Mat _ cls _) = Mat rws cls $ for xs (\xi -> for (rows (transpose m)) (\yi -> xi `vmul` yi))
+  where
+      {-@ transpose :: m:Matrix a -> MatrixN a (mCol m) (mRow m) @-}
+      transpose :: Matrix a -> Matrix a
+      transpose (Mat r c rows) = Mat c r $ go c r rows
 
---       prod i j k m1 m2 = (ind m1 i j) * (ind m2 j k)
+      {-@ go :: cx:Nat -> rx:Nat -> VectorN (VectorN a cx) rx -> VectorN (VectorN a rx) cx @-}
+      go :: Int -> Int -> Vector (Vector a) -> Vector (Vector a)
+      go 0 _ _ = Vec 0 []
+      go cx rx (Vec rx2 rows) = let heads = map (\(Vec _ r) -> head r) rows
+                                    tails = map (\(Vec _ r) -> Vec (cx - 1) $ tail r) rows
+                                    (Vec _ vTails) = go (cx-1) rx (Vec rx tails)
+                                    in Vec cx $ Vec rx heads : vTails 
 
---       rowxcol :: Int -> Int -> Matrix Int -> Matrix Int -> [Int]
---       rowxcol row col m1 m2 = prod row 0 col m1 m2 : []
 
 {-@ (+++) :: m1:Matrix Int -> {m2:Matrix Int | mRow m1 == mRow m2 && mCol m1 == mCol m2} -> {m3:Matrix Int | mRow m3 == mRow m2 && mCol m3 == mCol m2} @-}
 (+++) :: Matrix Int -> Matrix Int -> Matrix Int
@@ -87,10 +88,16 @@ v1 = Vec 4 [1, 2, 3, 4]
 {-@ v2 :: VectorN _ 4 @-}
 v2 :: Vector Int
 v2 = Vec 4 [5, 6, 7, 8]
+{-@ v3 :: VectorN _ 4 @-}
 v3 :: Vector Int
 v3 = v1 `vplus` v2
 v4 :: Int
 v4 = v1 `vmul` v2
+
+-- v5 = Vec 10 [1, 2] -- fails, list size does not match declared size
+v6 = Vec 1 [1]
+-- v7 = v1 `vplus` v6 -- fails, dim mismatch
+-- v8 = v1 `vmul` v6 -- fails, dim mismatch
 
 {-@ m1 :: MatrixN _ 2 3 @-}
 m1 :: Matrix Int
@@ -98,20 +105,24 @@ m1 = Mat 2 3 $ Vec 2 [Vec 3 [1, 2, 3], Vec 3 [4, 5, 6]]
 {-@ m2 :: MatrixN _ 2 3 @-}
 m2 :: Matrix Int
 m2 = Mat 2 3 $ Vec 2 [Vec 3 [-1, -2, -3], Vec 3 [-4, -5, -6]]
+{-@ m3 :: MatrixN _ 2 3 @-}
 m3 :: Matrix Int
 m3 = m1 +++ m2
 
 {-@ m4 :: MatrixN _ 3 2 @-}
 m4 :: Matrix Int
 m4 = Mat 3 2 $ Vec 3 [Vec 2 [10, 20], Vec 2 [30, 40], Vec 2 [50, 60]]
--- m5 :: Matrix Int
--- m5 = m1 *** m4
+m5 :: Matrix Int
+{-@ m5 :: MatrixN _ 2 2 @-}
+m5 = m1 *** m4
+
+-- m6 = m1 +++ m4 -- fails
+-- m7 = m1 *** m2 -- fails
+-- m8 = Mat 2 2 $ Vec 0 [] -- fails, vec size mismatch
 
 main :: IO ()
 main = do
     print v3
     print v4
-    -- print $ col m4 0
-    -- print $ col m4 1
     print m3
-    -- print m5
+    print m5
